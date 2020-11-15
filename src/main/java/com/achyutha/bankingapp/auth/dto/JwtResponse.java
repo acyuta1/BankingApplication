@@ -15,6 +15,7 @@ import java.util.List;
 public class JwtResponse {
     String token;
     Long id;
+    String employeeId;
     String name;
     List<String> roles;
 }

@@ -31,6 +31,8 @@ public class UserDetailsImpl implements UserDetails {
     @JsonIgnore
     private String password;
 
+    private String employeeId;
+
     private Collection<? extends GrantedAuthority> authorities;
 
     /**
@@ -43,7 +45,13 @@ public class UserDetailsImpl implements UserDetails {
                 .map(role -> new SimpleGrantedAuthority(role.getName().name()))
                 .collect(Collectors.toList());
 
-        return new UserDetailsImpl().setId(user.getId()).setName(user.getFullName()).setUsername(user.getUsername()).setAuthorities(authorities).setPassword(user.getPassword());
+        return new UserDetailsImpl()
+                .setId(user.getId())
+                .setName(String.format("%s %s",user.getFirstName(),user.getLastName()))
+                .setUsername(user.getUsername())
+                .setAuthorities(authorities)
+                .setPassword(user.getPassword())
+                .setEmployeeId(user.getEmployeeId());
     }
 
     @Override

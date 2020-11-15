@@ -1,9 +1,11 @@
 package com.achyutha.bankingapp.domain.service;
 
+import com.achyutha.bankingapp.auth.model.Role;
 import com.achyutha.bankingapp.domain.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -25,5 +27,26 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return Boolean yes/no indicating the presence/absence.
      */
     Boolean existsByUsername(String username);
+
+    /**
+     * To check if a user by a username exists already.
+     * @param email The email.
+     * @return Boolean yes/no indicating the presence/absence.
+     */
+    Boolean existsByEmail(String email);
+
+    /**
+     * Fetch latest user.
+     *  -- Orders entries by Round num and fetches the first entry.
+     * @return Optional Round.
+     */
+    Optional<User> findFirstByOrderByIdDesc();
+
+    /**
+     * Fetch all users having specific roles.
+     * @param role Set of roles.
+     * @return List of users.
+     */
+    List<User> findByRoles_(Role role);
 
 }

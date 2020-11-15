@@ -1,6 +1,7 @@
 package com.achyutha.bankingapp.auth.dto;
 
 import com.achyutha.bankingapp.auth.model.RoleType;
+import com.achyutha.bankingapp.domain.model.UserStatus;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -17,10 +18,11 @@ import java.util.Set;
 @Accessors(chain = true)
 public class SignupRequest {
 
-    String username;
-    String fullName;
+    String firstName;
+    String lastName;
     LocalDate dob;
     String password;
     String email;
+    UserStatus userStatus;
     Set<RoleType> role = new HashSet<>();
 }
