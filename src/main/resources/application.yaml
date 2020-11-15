@@ -1,0 +1,46 @@
+spring:
+
+  application:
+    name: BankingApplication
+  messages:
+    use-code-as-default-message: true
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    generate-ddl: true
+
+    open-in-view: false
+    properties:
+      dialect: org.hibernate.dialect.PostgreSQLDialect
+  mvc:
+    view: #if present.
+      prefix: /WEB-INF/jsp/
+      suffix: .jsp
+  datasource:
+    initialization-mode: always
+    url: jdbc:postgresql://localhost:5432/bankingapp
+    username: postgres
+    password: 1234
+  data:
+    web:
+      pageable:
+        default-page-size: 210
+        max-page-size: 2000
+        min-page-size: 1
+        one-indexed-parameters: false
+        page-parameter: page
+        prefix:
+        qualifier-delimiter: _
+        size-parameter: size
+        pageable:
+          fallback-pageable:
+            page-parameter: page
+            size-parameter: size
+
+server:
+  error:
+    include-message: always
+bezkoder:
+  app:
+  jwtSecret: bezKoderSecretKey
+  jwtExpirationMs: 86400000
