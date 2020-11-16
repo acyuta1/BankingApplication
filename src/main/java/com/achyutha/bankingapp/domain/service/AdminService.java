@@ -1,6 +1,6 @@
 package com.achyutha.bankingapp.domain.service;
 
-import com.achyutha.bankingapp.auth.dto.SignupRequest;
+import com.achyutha.bankingapp.auth.dto.SignUpRequest;
 import com.achyutha.bankingapp.domain.model.User;
 import org.springframework.http.ResponseEntity;
 
@@ -13,7 +13,7 @@ public interface AdminService {
      * @param signupRequest  The details (DOB, password - random, must be changed on first login.)
      * @return The response with newly created employee username.
      */
-    ResponseEntity<?> addEmployee(SignupRequest signupRequest);
+    ResponseEntity<?> addEmployee(SignUpRequest signupRequest);
 
     /**
      * To delete an existing employee.

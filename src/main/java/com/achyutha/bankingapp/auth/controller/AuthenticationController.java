@@ -1,7 +1,7 @@
 package com.achyutha.bankingapp.auth.controller;
 
 import com.achyutha.bankingapp.auth.dto.LoginRequest;
-import com.achyutha.bankingapp.auth.dto.SignupRequest;
+import com.achyutha.bankingapp.auth.dto.SignUpRequest;
 import com.achyutha.bankingapp.auth.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,7 +53,7 @@ public class AuthenticationController {
      * @return Appropriate response in String.
      */
     @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody SignUpRequest signUpRequest) {
 
         return authService.signUp(signUpRequest);
     }

@@ -67,4 +67,12 @@ public class User {
     @NotNull
     @Convert(converter = UserStatusToStringConverter.class)
     private UserStatus userStatus = UserStatus.active;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "kyc_id", referencedColumnName = "id")
+    private Kyc kyc;
+
+    @JsonIgnore
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "user", cascade = CascadeType.ALL)
+    private Set<AccountRequest> accountRequests = new HashSet<>();
 }

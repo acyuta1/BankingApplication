@@ -1,12 +1,12 @@
 package com.achyutha.bankingapp.auth.service;
 
 import com.achyutha.bankingapp.auth.dto.LoginRequest;
-import com.achyutha.bankingapp.auth.dto.SignupRequest;
+import com.achyutha.bankingapp.auth.dto.SignUpRequest;
 import org.springframework.http.ResponseEntity;
 
 public interface AuthService {
 
-    ResponseEntity<?> signUp(SignupRequest signUpRequest);
+    ResponseEntity<?> signUp(SignUpRequest signUpRequest);
 
     ResponseEntity<?> signIn(LoginRequest loginRequest);
 }

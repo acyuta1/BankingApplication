@@ -1,6 +1,6 @@
 package com.achyutha.bankingapp.domain.controller;
 
-import com.achyutha.bankingapp.auth.dto.SignupRequest;
+import com.achyutha.bankingapp.auth.dto.SignUpRequest;
 import com.achyutha.bankingapp.domain.model.User;
 import com.achyutha.bankingapp.domain.service.AdminService;
 import lombok.RequiredArgsConstructor;
@@ -41,9 +41,9 @@ public class AdminController {
      * @param signupRequest The employee signupRequest object.
      * @return The response, with newly created employee username.
      */
-    @PostMapping("/{id}/add")
+    @PostMapping("/employees/add")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> addEmployee(@RequestBody SignupRequest signupRequest){
+    public ResponseEntity<?> addEmployee(@RequestBody SignUpRequest signupRequest){
         return adminService.addEmployee(signupRequest);
     }
 
@@ -52,7 +52,7 @@ public class AdminController {
      * @param user The employee signupRequest object.
      * @return The response, with newly created employee username.
      */
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/employees/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteEmployee(@PathVariable("id") User user){
         return adminService.deleteEmployee(user);
@@ -62,7 +62,7 @@ public class AdminController {
      * Fetch all users having EMPLOYEE as the role.
      * @return List of users.
      */
-    @GetMapping("/{id}/employees")
+    @GetMapping("/employees")
     @PreAuthorize("hasRole('ADMIN')")
     public List<User> getAllEmployeeUsers(){
         return adminService.getAllEmployees();
