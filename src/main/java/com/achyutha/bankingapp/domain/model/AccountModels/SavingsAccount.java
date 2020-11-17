@@ -1,6 +1,5 @@
 package com.achyutha.bankingapp.domain.model.AccountModels;
 
-import com.achyutha.bankingapp.domain.model.AccountType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.Accessors;
@@ -8,9 +7,11 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
+import javax.validation.constraints.NotNull;
 
 @EqualsAndHashCode(callSuper = true)
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,12 +19,12 @@ import javax.persistence.EntityListeners;
 @Entity(name = "savings_account")
 @EntityListeners(AuditingEntityListener.class)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class SavingsAccount extends Account{
+public class SavingsAccount extends Account {
 
-        private Long balance = 0L;
+    @NotNull(message = "interest.accrued.cannot.be.null")
+    private Double interestAccruedLastMonth = 0.0;
 
-        private Double interestAccruedLastYear = 0.0;
-
-        private AccountType accountType = AccountType.savings;
+    @NotNull(message = "transaction.limit.null")
+    private Integer transactionsRemaining;
 
 }

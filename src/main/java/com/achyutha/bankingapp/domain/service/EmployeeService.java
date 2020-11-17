@@ -2,6 +2,7 @@ package com.achyutha.bankingapp.domain.service;
 
 import com.achyutha.bankingapp.auth.dto.SignUpRequest;
 import com.achyutha.bankingapp.domain.dto.UpdateAfterCreation;
+import com.achyutha.bankingapp.domain.model.AccountRequest;
 import com.achyutha.bankingapp.domain.model.Kyc;
 import com.achyutha.bankingapp.domain.model.User;
 import org.springframework.http.ResponseEntity;
@@ -9,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 
 public interface EmployeeService {
-
 
     /**
      * Update user and set new password. And then set user status to active.
@@ -39,4 +39,18 @@ public interface EmployeeService {
      * @return List of pending kyc.
      */
     List<Kyc> fetchAllPendingKyc();
+
+    /**
+     * To approve or reject a request.
+     * @param accountRequest The account request entry.
+     * @param approve true - approve, false - reject.
+     * @return The response.
+     */
+    ResponseEntity<?> processAccRequest(AccountRequest accountRequest, Boolean approve);
+
+    /**
+     * To fetch all pending account requests.
+     * @return List of Account request.
+     */
+    List<AccountRequest> fetchAllPendingAccRequests();
 }

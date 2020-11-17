@@ -3,10 +3,15 @@ package com.achyutha.bankingapp.common;
 import com.achyutha.bankingapp.auth.dto.SignUpRequest;
 import com.achyutha.bankingapp.auth.jwt.UserDetailsServiceImpl;
 import com.achyutha.bankingapp.auth.model.RoleType;
+import com.achyutha.bankingapp.domain.model.AccountModels.Account;
+import com.achyutha.bankingapp.domain.model.AccountModels.SavingsAccount;
+import com.achyutha.bankingapp.domain.model.AccountType;
 import com.achyutha.bankingapp.domain.model.UserStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Set;
 import java.util.UUID;
@@ -49,5 +54,13 @@ public class Utils {
                 .setUserStatus(UserStatus.initial)
                 .setDob(DEFAULT_DATE)
                 .setRole(Set.of(roleType));
+    }
+
+    public static <T extends Account> Account getDerivedClassInstance(AccountType accountType){
+
+        if(accountType.equals(AccountType.savings))
+            return new SavingsAccount();
+
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "no such type");
     }
 }

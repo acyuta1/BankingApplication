@@ -1,8 +1,9 @@
 package com.achyutha.bankingapp.auth.jwt;
 
+import com.achyutha.bankingapp.common.BankApplicationProperties;
 import io.jsonwebtoken.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
@@ -12,11 +13,15 @@ import java.util.Date;
  * Jwt utils.
  */
 @Component
+@RequiredArgsConstructor
+@Slf4j
 public class JwtUtils {
-    private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
-    //    @Value("${bezkoder.app.jwtSecret}")
-    private final String jwtSecret = "bezKoderSecretKey";
+    private final BankApplicationProperties properties;
+
+//    private final String jwtSecret;
+
+//    private final Logger logger;
 
     /**
      * Generates a jwt token, once authenticated.
@@ -26,15 +31,12 @@ public class JwtUtils {
     public String generateJwtToken(Authentication authentication) {
 
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
-        System.out.println(userPrincipal);
 
-        //    @Value("${bezkoder.app.jwtExpirationMs}")
-        int jwtExpirationMs = 86400000;
         return Jwts.builder()
                 .setSubject((userPrincipal.getUsername()))
                 .setIssuedAt(new Date())
-                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
-                .signWith(SignatureAlgorithm.HS512, jwtSecret)
+                .setExpiration(new Date((new Date()).getTime() + properties.getJwtExpirationMs()))
+                .signWith(SignatureAlgorithm.HS512, properties.getJwtSecret())
                 .compact();
     }
 
@@ -44,7 +46,7 @@ public class JwtUtils {
      * @return The username.
      */
     public String getUserNameFromJwtToken(String token) {
-        return Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody().getSubject();
+        return Jwts.parser().setSigningKey(properties.getJwtSecret()).parseClaimsJws(token).getBody().getSubject();
     }
 
     /**
@@ -54,18 +56,19 @@ public class JwtUtils {
      */
     public boolean validateJwtToken(String authToken) {
         try {
-            Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(authToken);
+            Jwts.parser().setSigningKey(properties.getJwtSecret()).parseClaimsJws(authToken);
             return true;
         } catch (SignatureException e) {
-            logger.error("Invalid JWT signature: {}", e.getMessage());
+            log.error("Invalid JWT signature: {}", e.getMessage());
         } catch (MalformedJwtException e) {
-            logger.error("Invalid JWT token: {}", e.getMessage());
+            log.error("Invalid JWT token: {}", e.getMessage());
         } catch (ExpiredJwtException e) {
-            logger.error("JWT token is expired: {}", e.getMessage());
+
+            log.error("JWT token is expired: {}", e.getMessage());
         } catch (UnsupportedJwtException e) {
-            logger.error("JWT token is unsupported: {}", e.getMessage());
+            log.error("JWT token is unsupported: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
-            logger.error("JWT claims string is empty: {}", e.getMessage());
+            log.error("JWT claims string is empty: {}", e.getMessage());
         }
 
         return false;

@@ -6,7 +6,7 @@ spring:
     use-code-as-default-message: true
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     generate-ddl: true
 
     open-in-view: false
@@ -40,7 +40,10 @@ spring:
 server:
   error:
     include-message: always
-bezkoder:
-  app:
-  jwtSecret: bezKoderSecretKey
-  jwtExpirationMs: 86400000
+
+bank-application-properties:
+  jwt-secret: bankAppSecurityKey
+  jwt-expiration-ms: 60000 #10 minutes
+  min-balance-savings: 300
+  transaction-limit-savings: 10
+  max-withdraw-limit: 100000

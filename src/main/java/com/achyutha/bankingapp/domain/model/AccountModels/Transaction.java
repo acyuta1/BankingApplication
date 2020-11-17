@@ -10,6 +10,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 @Entity()
@@ -25,9 +26,11 @@ public class Transaction {
     @Id
     private String id;
 
-    private Long balancePriorTransaction;
+    @NotNull(message = "prior.balance.null")
+    private Double balancePriorTransaction;
 
-    private Long balanceAfterTransaction;
+    @NotNull(message = "post.balance.null")
+    private Double balanceAfterTransaction;
 
     private LocalDate transactionDate;
 

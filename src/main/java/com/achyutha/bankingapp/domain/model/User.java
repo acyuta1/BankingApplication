@@ -3,6 +3,7 @@ package com.achyutha.bankingapp.domain.model;
 import com.achyutha.bankingapp.auth.model.Role;
 import com.achyutha.bankingapp.common.validation.group.AdminLevelValidation;
 import com.achyutha.bankingapp.domain.converter.UserStatusToStringConverter;
+import com.achyutha.bankingapp.domain.model.AccountModels.Account;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
@@ -71,6 +72,10 @@ public class User {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "kyc_id", referencedColumnName = "id")
     private Kyc kyc;
+
+    @JsonIgnore
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "user", cascade = CascadeType.ALL)
+    private Set<Account> accounts = new HashSet<>();
 
     @JsonIgnore
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "user", cascade = CascadeType.ALL)

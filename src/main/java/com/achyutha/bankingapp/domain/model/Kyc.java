@@ -13,6 +13,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 @Entity()
@@ -43,5 +44,6 @@ public class Kyc {
     @JsonIgnore
     private String newPassword;
 
+    @NotNull
     private KycVerificationStatus kycVerificationStatus = KycVerificationStatus.pending;
 }

@@ -1,8 +1,12 @@
 package com.achyutha.bankingapp.domain.controller;
 
 import com.achyutha.bankingapp.auth.jwt.UserDetailsServiceImpl;
+import com.achyutha.bankingapp.domain.dto.AccountRequestDto;
+import com.achyutha.bankingapp.domain.dto.AmountTransaction;
 import com.achyutha.bankingapp.domain.dto.UpdateAfterCreation;
-import com.achyutha.bankingapp.domain.model.Kyc;
+import com.achyutha.bankingapp.domain.model.AccountModels.Account;
+import com.achyutha.bankingapp.domain.model.AccountRequest;
+import com.achyutha.bankingapp.domain.model.KycVerificationStatus;
 import com.achyutha.bankingapp.domain.model.User;
 import com.achyutha.bankingapp.domain.service.CustomerService;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +19,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
+import java.util.List;
+
+import static com.achyutha.bankingapp.common.Constants.KYC_NOT_UPDATED;
 
 /**
  * Customer Controller.
@@ -30,26 +37,33 @@ public class CustomerController {
 
     private final UserDetailsServiceImpl userDetailsService;
 
-    private void compareUserName(String user){
-        if(!user.equals(userDetailsService.getCurrentLoggedInUser()))
+    private void compareUserName(String user) {
+        if (!user.equals(userDetailsService.getCurrentLoggedInUser()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "logged in user trying to alter other user.");
+    }
+
+    private void checkForKycVerification(User user) {
+        compareUserName(user.getUsername());
+        if (user.getKyc() == null || !user.getKyc().getKycVerificationStatus().equals(KycVerificationStatus.verified))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, KYC_NOT_UPDATED);
     }
 
     /**
      * To get information of the logged in customer.
+     *
      * @param user The user matching id.
      * @return The User object.
      */
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public User getCustomer(@PathVariable("id") User user)
-    {
+    public User getCustomer(@PathVariable("id") User user) {
         compareUserName(user.getUsername());
         return user;
     }
 
     /**
      * To update the users kyc information.
+     *
      * @param updateAfterCreation The kyc payload.
      * @return Response with appropriate String.
      */
@@ -61,7 +75,31 @@ public class CustomerController {
         return customerService.updateKyc(user, updateAfterCreation);
     }
 
-//    public ResponseEntity<?> requestAccount(){
-//
-//    }
+
+    @PostMapping("/{id}/account/request")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public AccountRequest requestAccount(@PathVariable("id") User user,
+                                         @RequestBody AccountRequestDto accountRequestDto) {
+        checkForKycVerification(user);
+        return customerService.requestForAccount(user, accountRequestDto);
+    }
+
+    @GetMapping("/{id}/account")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public List<? extends Account> getAllAccountsOfUser(@PathVariable("id") User user){
+        checkForKycVerification(user);
+        return customerService.fetchAllAccountsOfUsers(user);
+    }
+
+    @PutMapping("/{id}/account/{accountId}")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public Account depositOrWithdraw(
+            @PathVariable("id") User user,
+            @PathVariable("accountId") @Valid Account account,
+            @RequestBody @Valid AmountTransaction amountTransaction) {
+        checkForKycVerification(user);
+        return customerService.depositOrWithdrawFromAccount(user, account, amountTransaction);
+    }
+
+
 }

@@ -1,20 +1,25 @@
 package com.achyutha.bankingapp.domain.model.AccountModels;
 
 import com.achyutha.bankingapp.domain.model.AccountStatus;
+import com.achyutha.bankingapp.domain.model.AccountType;
+import com.achyutha.bankingapp.domain.model.User;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.*;
 import lombok.experimental.Accessors;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.validator.constraints.Range;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.util.HashSet;
 import java.util.Set;
 
-@Entity()
+@Entity
+@SuperBuilder
 @Getter
 @Setter
 @NoArgsConstructor
@@ -28,12 +33,25 @@ public abstract class Account {
     @Id
     private String id;
 
-    private String userName;
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "user_id")
+    @JsonProperty(access = JsonProperty.Access.READ_WRITE)
+    @JsonBackReference
+    private User user;
 
     private AccountStatus accountStatus = AccountStatus.awaitingkyc;
 
     @JsonIgnore
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "account", cascade = CascadeType.ALL)
-    private Set<Transaction> tournamentHistories = new HashSet<>();
+    private Set<Transaction> transactions = new HashSet<>();
+
+    @NotNull(message = "account.type.cannot.be.null")
+    private AccountType accountType;
+
+    @NotNull(message = "balance.is.null")
+    @Range(min = 0)
+    private Double balance = 0.0;
+
+
 
 }

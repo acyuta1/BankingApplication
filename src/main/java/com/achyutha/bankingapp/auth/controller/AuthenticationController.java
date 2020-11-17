@@ -57,4 +57,10 @@ public class AuthenticationController {
 
         return authService.signUp(signUpRequest);
     }
+
+//    @RequestMapping("/logout")
+//    public String logout(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+//        JwtUtil.invalidateRelatedTokens(httpServletRequest);
+//        CookieUtil.clear(httpServletResponse, jwtTokenCookieName);
+//    }
 }
