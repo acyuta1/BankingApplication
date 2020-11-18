@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static com.achyutha.bankingapp.auth.model.RoleType.ROLE_CUSTOMER;
+import static com.achyutha.bankingapp.common.Constants.LOAN_AMOUNT_CREDITED;
 import static com.achyutha.bankingapp.common.Constants.USER_NOT_FOUND;
 import static com.achyutha.bankingapp.common.Utils.defaultInit;
 
@@ -102,10 +103,82 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     /**
      * To calculate the repayment total amount.
+     *
      * @return Total repayment amount.
      */
-    private Double repaymentAmountCalc(Long loanAmount, RepaymentTenure repaymentTenure){
-        return loanAmount * (repaymentTenure.getInterestRate()/100);
+    private Double repaymentAmountCalc(Long loanAmount, RepaymentTenure repaymentTenure) {
+        return loanAmount * (repaymentTenure.getInterestRate() / 100);
+    }
+
+    /**
+     * If approved by an employee, the savings account will be created.
+     *
+     * @param accountRequest The Account request.
+     */
+    private void createSavingsAccount(AccountRequest accountRequest) {
+        getErrors(accountRequest, SavingsAccountValidation.class);
+        savingsAccountRepository.save((SavingsAccount) new SavingsAccount()
+                .setTransactionsRemaining(properties.getTransactionLimitSavings())
+                .setAccountType(AccountType.savings)
+                .setAccountStatus(AccountStatus.active)
+                .setUser(accountRequest.getUser())
+                .setId(UUID.randomUUID().toString()));
+
+        accountRequestRepository.save(accountRequest.setAccountRequestStatus(AccountRequestStatus.processed));
+    }
+
+    /**
+     * If approved by an employee, the current account will be created.
+     *
+     * @param accountRequest The Account request.
+     */
+    private void createCurrentAccount(AccountRequest accountRequest) {
+        getErrors(accountRequest, SavingsAccountValidation.class, CurrentAccountValidation.class);
+        var currentAccounts = accountRequestRepository
+                .findAllByUserAndAccountTypeAndAccountRequestStatus(accountRequest.getUser(), AccountType.current, AccountRequestStatus.processed);
+        if (!currentAccounts.isEmpty()) {
+            accountRequestRepository.save(accountRequest.setAccountRequestStatus(AccountRequestStatus.rejected));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A user can only have one current account");
+        }
+        currentAccountRepository.save((CurrentAccount) new CurrentAccount()
+                .setEmployer(accountRequest.getEmployer())
+                .setId(UUID.randomUUID().toString())
+                .setAccountStatus(AccountStatus.active)
+                .setAccountType(AccountType.current)
+                .setUser(accountRequest.getUser()));
+        accountRequestRepository.save(accountRequest.setAccountRequestStatus(AccountRequestStatus.processed));
+    }
+
+    /**
+     * If approved by an employee, the loan account will be created.
+     *
+     * @param accountRequest The Account request.
+     */
+    private void createLoanAccount(AccountRequest accountRequest) {
+        getErrors(accountRequest, SavingsAccountValidation.class, LoanAccountValidation.class);
+        var currentAccountEntry = currentAccountRepository.findByUser(accountRequest.getUser());
+        if (currentAccountEntry.isEmpty())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current account must be present.");
+        var currentAccount = currentAccountEntry.get();
+        var transactions = currentAccount.getTransactions();
+        transactions.add(new Transaction()
+                .setId(UUID.randomUUID().toString())
+                .setBalanceAfterTransaction(currentAccount.getBalance() + accountRequest.getLoanAmount())
+                .setTransactionDate(LocalDate.now())
+                .setMessage(String.format(LOAN_AMOUNT_CREDITED, accountRequest.getLoanAmount()))
+                .setBalancePriorTransaction(currentAccount.getBalance()).setAccount(currentAccount));
+        currentAccount.setBalance(currentAccount.getBalance() + accountRequest.getLoanAmount()).setTransactions(transactions);
+        currentAccountRepository.save(currentAccount);
+        loanAccountRepository.save((LoanAccount) new LoanAccount()
+                .setLoanAmount(accountRequest.getLoanAmount())
+                .setLastRepayment(0.0)
+                .setRepaymentTenure(accountRequest.getRepaymentTenure())
+                .setBalance(accountRequest.getLoanAmount() + repaymentAmountCalc(accountRequest.getLoanAmount(), accountRequest.getRepaymentTenure()))
+                .setId(UUID.randomUUID().toString())
+                .setAccountStatus(AccountStatus.active)
+                .setAccountType(AccountType.loan)
+                .setUser(accountRequest.getUser()));
+        accountRequestRepository.save(accountRequest.setAccountRequestStatus(AccountRequestStatus.processed));
     }
 
     @Override
@@ -115,54 +188,19 @@ public class EmployeeServiceImpl implements EmployeeService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Already processed or rejected.");
         if (approve) {
             var typeRequested = accountRequest.getAccountType();
-            if (typeRequested.equals(AccountType.savings)) {
-                getErrors(accountRequest, SavingsAccountValidation.class);
-                savingsAccountRepository.save((SavingsAccount) new SavingsAccount()
-                        .setTransactionsRemaining(properties.getTransactionLimitSavings())
-                        .setAccountType(AccountType.savings)
-                        .setAccountStatus(AccountStatus.active)
-                        .setUser(accountRequest.getUser())
-                        .setId(UUID.randomUUID().toString()));
-
-                accountRequestRepository.save(accountRequest.setAccountRequestStatus(AccountRequestStatus.processed));
-                return ResponseEntity.ok("Account created.");
-            } else if (typeRequested.equals(AccountType.current)) {
-                getErrors(accountRequest, SavingsAccountValidation.class, CurrentAccountValidation.class);
-                var currentAccounts = accountRequestRepository
-                        .findAllByUserAndAccountTypeAndAccountRequestStatus(accountRequest.getUser(), AccountType.current, AccountRequestStatus.processed);
-                if (!currentAccounts.isEmpty()) {
-                    accountRequestRepository.save(accountRequest.setAccountRequestStatus(AccountRequestStatus.rejected));
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A user can only have one current account");
+            switch (typeRequested) {
+                case savings: {
+                    createSavingsAccount(accountRequest);
+                    return ResponseEntity.ok("Savings account created.");
                 }
-                currentAccountRepository.save((CurrentAccount) new CurrentAccount()
-                        .setEmployer(accountRequest.getEmployer())
-                        .setId(UUID.randomUUID().toString())
-                        .setAccountStatus(AccountStatus.active)
-                        .setAccountType(AccountType.current)
-                        .setUser(accountRequest.getUser()));
-                accountRequestRepository.save(accountRequest.setAccountRequestStatus(AccountRequestStatus.processed));
-                return ResponseEntity.ok("Account created.");
-            } else if (typeRequested.equals(AccountType.loan)) {
-                getErrors(accountRequest, SavingsAccountValidation.class, LoanAccountValidation.class);
-                var currentAccountEntry = currentAccountRepository.findByUser(accountRequest.getUser());
-                if(currentAccountEntry.isEmpty())
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current account must be present.");
-                var currentAccount = currentAccountEntry.get();
-                var transactions = currentAccount.getTransactions();
-                transactions.add(new Transaction().setId(UUID.randomUUID().toString()).setTransactionDate(LocalDate.now()).setBalancePriorTransaction(currentAccount.getBalance()).setAccount(currentAccount));
-                currentAccount.setBalance(currentAccount.getBalance() + accountRequest.getLoanAmount()).setTransactions(transactions);
-                currentAccountRepository.save(currentAccount);
-                loanAccountRepository.save((LoanAccount) new LoanAccount()
-                        .setLoanAmount(accountRequest.getLoanAmount())
-                        .setLastRepayment(0.0)
-                        .setRepaymentTenure(accountRequest.getRepaymentTenure())
-                        .setBalance(repaymentAmountCalc(accountRequest.getLoanAmount(),accountRequest.getRepaymentTenure()))
-                        .setId(UUID.randomUUID().toString())
-                        .setAccountStatus(AccountStatus.active)
-                        .setAccountType(AccountType.loan)
-                        .setUser(accountRequest.getUser()));
-                accountRequestRepository.save(accountRequest.setAccountRequestStatus(AccountRequestStatus.processed));
-                return ResponseEntity.ok("Account created.");
+                case current: {
+                    createCurrentAccount(accountRequest);
+                    return ResponseEntity.ok("Credit account created.");
+                }
+                case loan: {
+                    createLoanAccount(accountRequest);
+                    return ResponseEntity.ok("Loan account created.");
+                }
             }
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incorrect request type.");
         }

@@ -3,9 +3,11 @@ package com.achyutha.bankingapp.domain.controller;
 import com.achyutha.bankingapp.auth.jwt.UserDetailsServiceImpl;
 import com.achyutha.bankingapp.domain.dto.AccountRequestDto;
 import com.achyutha.bankingapp.domain.dto.AmountTransaction;
+import com.achyutha.bankingapp.domain.dto.TransferAmountDto;
 import com.achyutha.bankingapp.domain.dto.UpdateAfterCreation;
 import com.achyutha.bankingapp.domain.model.AccountModels.Account;
 import com.achyutha.bankingapp.domain.model.AccountRequest;
+import com.achyutha.bankingapp.domain.model.Kyc;
 import com.achyutha.bankingapp.domain.model.KycVerificationStatus;
 import com.achyutha.bankingapp.domain.model.User;
 import com.achyutha.bankingapp.domain.service.CustomerService;
@@ -86,7 +88,7 @@ public class CustomerController {
 
     @GetMapping("/{id}/account")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public List<? extends Account> getAllAccountsOfUser(@PathVariable("id") User user){
+    public List<? extends Account> getAllAccountsOfUser(@PathVariable("id") User user) {
         checkForKycVerification(user);
         return customerService.fetchAllAccountsOfUsers(user);
     }
@@ -95,10 +97,35 @@ public class CustomerController {
     @PreAuthorize("hasRole('CUSTOMER')")
     public Account depositOrWithdraw(
             @PathVariable("id") User user,
-            @PathVariable("accountId") @Valid Account account,
+            @PathVariable("accountId") Account account,
             @RequestBody @Valid AmountTransaction amountTransaction) {
         checkForKycVerification(user);
         return customerService.depositOrWithdrawFromAccount(user, account, amountTransaction);
+    }
+//
+    @GetMapping("/{id}/account/{accountId}")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public Account getAccount(@PathVariable("id") User user,
+                              @PathVariable("accountId") Account account) {
+        checkForKycVerification(user);
+        return customerService.getAccount(user, account);
+    }
+
+    @GetMapping("/{id}/kyc/{kycId}")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public Kyc getKyc(@PathVariable("id") User user,
+                      @PathVariable("kycId") Kyc kyc) {
+        checkForKycVerification(user);
+        return customerService.getDetailsOfCustomer(user, kyc);
+    }
+
+    @PostMapping("/{id}/account/{accountId}")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<?> transferAmount(@PathVariable("id") User user,
+                                            @PathVariable("accountId") Account account,
+                                            @RequestBody @Valid TransferAmountDto transferAmountDto) {
+        checkForKycVerification(user);
+        return customerService.transferAmount(user, account, transferAmountDto);
     }
 
 

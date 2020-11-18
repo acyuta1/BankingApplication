@@ -2,9 +2,11 @@ package com.achyutha.bankingapp.domain.service;
 
 import com.achyutha.bankingapp.domain.dto.AccountRequestDto;
 import com.achyutha.bankingapp.domain.dto.AmountTransaction;
+import com.achyutha.bankingapp.domain.dto.TransferAmountDto;
 import com.achyutha.bankingapp.domain.dto.UpdateAfterCreation;
 import com.achyutha.bankingapp.domain.model.AccountModels.Account;
 import com.achyutha.bankingapp.domain.model.AccountRequest;
+import com.achyutha.bankingapp.domain.model.Kyc;
 import com.achyutha.bankingapp.domain.model.User;
 import org.springframework.http.ResponseEntity;
 
@@ -30,7 +32,8 @@ public interface CustomerService {
 
     /**
      * To deposit or withdraw from an account.
-     * @param user The user.
+     *
+     * @param user
      * @param account The account.
      * @param amountTransaction The transaction information.
      * @return The account.
@@ -43,4 +46,29 @@ public interface CustomerService {
      * @return The List of accounts.
      */
     List<? extends Account> fetchAllAccountsOfUsers(User user);
+
+    /**
+     * To fetch account of a user.
+     * @param user The user.
+     * @param account The account.
+     * @return The account post verification.
+     */
+    Account getAccount(User user, Account account);
+
+    /**
+     * Fetch kyc of a customer.
+     * @param user The user.
+     * @param kyc The kyc.
+     * @return Kyc post verification.
+     */
+    Kyc getDetailsOfCustomer(User user, Kyc kyc);
+
+    /**
+     * To transfer amount from one account to another. (of user).
+     * @param user The user requesting transfer.
+     * @param account The account from which amount has to be transfered.
+     * @param transferAmountDto The transfer amount dto.
+     * @return The response.
+     */
+    ResponseEntity<?> transferAmount(User user, Account account, TransferAmountDto transferAmountDto);
 }

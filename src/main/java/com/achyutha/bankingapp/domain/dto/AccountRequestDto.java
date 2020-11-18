@@ -9,6 +9,7 @@ import com.achyutha.bankingapp.domain.model.RepaymentTenure;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.hibernate.validator.constraints.Range;
 
 import javax.persistence.Convert;
 import javax.validation.constraints.NotNull;
@@ -30,6 +31,7 @@ public class AccountRequestDto {
     @NotNull(groups = CurrentAccountValidation.class)
     private String employer;
 
+    @Range(min = 100000)
     @NotNull(message = "loan.is.null", groups = {LoanAccountValidation.class})
     private Long loanAmount;
 

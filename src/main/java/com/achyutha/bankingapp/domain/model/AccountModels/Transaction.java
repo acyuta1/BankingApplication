@@ -34,6 +34,8 @@ public class Transaction {
 
     private LocalDate transactionDate;
 
+    private String message;
+
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "account_id")
     @JsonProperty(access = JsonProperty.Access.READ_WRITE)

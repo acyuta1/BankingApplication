@@ -4,6 +4,7 @@ import com.achyutha.bankingapp.domain.model.RepaymentTenure;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.Accessors;
+import org.hibernate.validator.constraints.Range;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.Entity;
@@ -19,11 +20,12 @@ import static com.achyutha.bankingapp.domain.model.RepaymentTenure.year1;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@Entity(name = "current_account")
+@Entity(name = "loan_account")
 @EntityListeners(AuditingEntityListener.class)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class LoanAccount extends Account {
 
+    @Range(min = 100000)
     @NotNull(message = "loan.is.null")
     private Long loanAmount;
 
