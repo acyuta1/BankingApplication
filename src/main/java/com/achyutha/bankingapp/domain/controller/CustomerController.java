@@ -6,10 +6,7 @@ import com.achyutha.bankingapp.domain.dto.AmountTransaction;
 import com.achyutha.bankingapp.domain.dto.TransferAmountDto;
 import com.achyutha.bankingapp.domain.dto.UpdateAfterCreation;
 import com.achyutha.bankingapp.domain.model.AccountModels.Account;
-import com.achyutha.bankingapp.domain.model.AccountRequest;
-import com.achyutha.bankingapp.domain.model.Kyc;
-import com.achyutha.bankingapp.domain.model.KycVerificationStatus;
-import com.achyutha.bankingapp.domain.model.User;
+import com.achyutha.bankingapp.domain.model.*;
 import com.achyutha.bankingapp.domain.service.CustomerService;
 import com.achyutha.bankingapp.domain.service.ExportToPdf;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +26,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import static com.achyutha.bankingapp.common.Constants.KYC_NOT_UPDATED;
+import static com.achyutha.bankingapp.common.Constants.CUSTOMER_NOT_ACTIVE;
 
 /**
  * Customer Controller.
@@ -60,10 +57,27 @@ public class CustomerController {
      *
      * @param user The user.
      */
-    private void checkForKycVerification(User user) {
+    private void checkIfActive(User user) {
         compareUserName(user.getUsername());
-        if (user.getKyc() == null || !user.getKyc().getKycVerificationStatus().equals(KycVerificationStatus.verified))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, KYC_NOT_UPDATED);
+        if (user.getKyc() == null || !user.getKyc().getKycVerificationStatus().equals(KycVerificationStatus.verified) || user.getUserStatus().equals(UserStatus.inactive))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, CUSTOMER_NOT_ACTIVE);
+    }
+
+    /**
+     * Initial check to see if the account belongs to user and is active.
+     * @param user The user.
+     * @param account The account linked to user.
+     */
+    public void checkForAccountValidity(User user, Account account, Boolean isActiveCheck){
+        checkIfActive(user);
+        if (!account.getUser().getUsername().equals(user.getUsername()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Account does not belong to user.");
+        if(isActiveCheck){
+            if (!account.getAccountStatus().equals(AccountStatus.active)) {
+                log.error("The account {} is not active", account.getId());
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Account is not active");
+            }
+        }
     }
 
     /**
@@ -101,7 +115,7 @@ public class CustomerController {
     @PreAuthorize("hasRole('CUSTOMER')")
     public AccountRequest requestAccount(@PathVariable("id") User user,
                                          @RequestBody AccountRequestDto accountRequestDto) {
-        checkForKycVerification(user);
+        checkIfActive(user);
         log.debug("User {} requesting for account of type {}", user.getUsername(), accountRequestDto.getAccountType());
         return customerService.requestForAccount(user, accountRequestDto);
     }
@@ -109,7 +123,7 @@ public class CustomerController {
     @GetMapping("/{id}/account")
     @PreAuthorize("hasRole('CUSTOMER')")
     public List<? extends Account> getAllAccountsOfUser(@PathVariable("id") User user) {
-        checkForKycVerification(user);
+        checkIfActive(user);
         log.trace("Fetching all accounts of user: {}", user.getUsername());
         return customerService.fetchAllAccountsOfUsers(user);
     }
@@ -120,7 +134,7 @@ public class CustomerController {
             @PathVariable("id") User user,
             @PathVariable("accountId") Account account,
             @RequestBody @Valid AmountTransaction amountTransaction) {
-        checkForKycVerification(user);
+        checkForAccountValidity(user, account, true);
         log.trace("A transaction request {} on account {}", amountTransaction.getTransactionType(),
                 amountTransaction.getAccountType());
         return customerService.depositOrWithdrawFromAccount(user, account, amountTransaction);
@@ -131,16 +145,16 @@ public class CustomerController {
     @PreAuthorize("hasRole('CUSTOMER')")
     public Account getAccount(@PathVariable("id") User user,
                               @PathVariable("accountId") Account account) {
-        checkForKycVerification(user);
+        checkForAccountValidity(user, account, false);
         log.trace("Fetching account with id {} of user {}", account.getId(), user.getUsername());
-        return customerService.getAccount(user, account);
+        return account;
     }
 
     @GetMapping("/{id}/kyc/{kycId}")
     @PreAuthorize("hasRole('CUSTOMER')")
     public Kyc getKyc(@PathVariable("id") User user,
                       @PathVariable("kycId") Kyc kyc) {
-        checkForKycVerification(user);
+        checkIfActive(user);
         log.trace("Getting KYC of a customer with username {}.", user.getUsername());
         return customerService.getDetailsOfCustomer(user, kyc);
     }
@@ -150,7 +164,7 @@ public class CustomerController {
     public ResponseEntity<?> transferAmount(@PathVariable("id") User user,
                                             @PathVariable("accountId") Account account,
                                             @RequestBody @Valid TransferAmountDto transferAmountDto) {
-        checkForKycVerification(user);
+        checkForAccountValidity(user, account, true);
         log.trace("Transfer request from account {} to account {} by user {}",
                 account.getId(), transferAmountDto.getAccountId(), user.getUsername());
         return customerService.transferAmount(user, account, transferAmountDto);
@@ -160,7 +174,7 @@ public class CustomerController {
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<?> closeAccount(@PathVariable("id") User user,
                                           @PathVariable("accountId") Account account) {
-        checkForKycVerification(user);
+        checkIfActive(user);
         log.trace("Attempting to close account {} by user {}", account.getId(), user.getUsername());
         return customerService.closeAccount(user, account);
     }
@@ -169,7 +183,7 @@ public class CustomerController {
     @PreAuthorize("hasRole('CUSTOMER')")
     public void exportToPdf(@PathVariable("id") User user,
                             HttpServletResponse response) throws IOException {
-        checkForKycVerification(user);
+        checkIfActive(user);
         response.setContentType("application/pdf");
         DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
         String currentDateTime = dateFormatter.format(new Date());
@@ -177,7 +191,6 @@ public class CustomerController {
         String headerKey = "Content-Disposition";
         String headerValue = "attachment; filename=users_" + currentDateTime + ".pdf";
         response.setHeader(headerKey, headerValue);
-
 
         ExportToPdf exporter = new ExportToPdf(user);
         exporter.export(response);

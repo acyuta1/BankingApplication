@@ -1,6 +1,7 @@
 package com.achyutha.bankingapp.domain.service;
 
 import com.achyutha.bankingapp.common.BankApplicationProperties;
+import com.achyutha.bankingapp.common.Utils;
 import com.achyutha.bankingapp.common.validation.group.CurrentAccountValidation;
 import com.achyutha.bankingapp.common.validation.group.CustomerLevelValidation;
 import com.achyutha.bankingapp.common.validation.group.LoanAccountValidation;
@@ -18,8 +19,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.validation.Validator;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.achyutha.bankingapp.common.AccountUtils.constructTransaction;
@@ -34,8 +35,6 @@ public class CustomerServiceImpl implements CustomerService {
 
     private final KycRepository kycRepository;
 
-    private final Validator validator;
-
     private final UserRepository userRepository;
 
     private final BankApplicationProperties properties;
@@ -47,6 +46,8 @@ public class CustomerServiceImpl implements CustomerService {
     private final LoanAccountRepository loanAccountRepository;
 
     private final AccountRepository<Account> accountRepository;
+
+    private final Utils utils;
 
     /**
      * Constructs a kyc object from the dto object.
@@ -63,20 +64,6 @@ public class CustomerServiceImpl implements CustomerService {
                 .setPanCard(updateAfterCreation.getPanCard())
                 .setAadharNumber(updateAfterCreation.getAadharNumber())
                 .setDob(updateAfterCreation.getDob());
-    }
-
-    /**
-     * To validateAccountRequest dto object.
-     *
-     * @param accountRequestDto The account request object.
-     * @param classes           The classes - groups.
-     */
-    private void getErrors(AccountRequestDto accountRequestDto, Class<?>... classes) {
-        var errors = validator.validate(accountRequestDto, classes);
-        if (errors.size() > 0) {
-            log.trace("Found error while validating account request dto");
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "errors: " + errors.toString());
-        }
     }
 
     /**
@@ -212,34 +199,31 @@ public class CustomerServiceImpl implements CustomerService {
     public ResponseEntity<?> updateKyc(User user, UpdateAfterCreation updateAfterCreation) {
 
         // Validating updateAfterCreationDTO.
-        var errors = validator.validate(updateAfterCreation, CustomerLevelValidation.class);
-        if (errors.isEmpty()) {
-            log.debug("No errors found during validation.");
+        utils.checkForErrors(updateAfterCreation, CustomerLevelValidation.class);
+        log.debug("No errors found during validation.");
 
-            // Checking if an already existing kyc exists.
-            var kycExisting = kycRepository.findByUserName(user.getUsername());
+        // Checking if an already existing kyc exists.
+        var kycExisting = kycRepository.findByUserName(user.getUsername());
 
-            if (kycExisting.isPresent()) {
-                switch (kycExisting.get().getKycVerificationStatus()) {
-                    // If exists and is pending, we throw an exception.
-                    case pending:
-                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You have a pending kyc request present already.");
-                        // If exists and is rejected, we create a new request.
-                    case rejected: {
-                        kycRepository.save(constructKyc(updateAfterCreation, user));
-                        return ResponseEntity.ok("Submitted request.");
-                    }
-                    // If already verified, we throw an error.
-                    case verified:
-                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Your kyc is already verified.");
+        if (kycExisting.isPresent()) {
+            switch (kycExisting.get().getKycVerificationStatus()) {
+                // If exists and is pending, we throw an exception.
+                case pending:
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You have a pending kyc request present already.");
+                    // If exists and is rejected, we create a new request.
+                case rejected: {
+                    kycRepository.save(constructKyc(updateAfterCreation, user));
+                    return ResponseEntity.ok("Submitted request.");
                 }
+                // If already verified, we throw an error.
+                case verified:
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Your kyc is already verified.");
             }
-            log.debug("Saving a new request for user {}", user.getUsername());
-            // Saving a new request.
-            kycRepository.save(constructKyc(updateAfterCreation, user));
-            return ResponseEntity.ok("Kyc submitted.");
         }
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, errors.toString());
+        log.debug("Saving a new request for user {}", user.getUsername());
+        // Saving a new request.
+        kycRepository.save(constructKyc(updateAfterCreation, user));
+        return ResponseEntity.ok("Kyc submitted.");
     }
 
     @Override
@@ -249,11 +233,11 @@ public class CustomerServiceImpl implements CustomerService {
         Only after validation, we proceed.
          */
         if (accountRequestDto.getAccountType().equals(AccountType.savings))
-            getErrors(accountRequestDto, SavingsAccountValidation.class);
+            utils.checkForErrors(accountRequestDto, SavingsAccountValidation.class);
         else if (accountRequestDto.getAccountType().equals(AccountType.current))
-            getErrors(accountRequestDto, SavingsAccountValidation.class, CurrentAccountValidation.class);
+            utils.checkForErrors(accountRequestDto, SavingsAccountValidation.class, CurrentAccountValidation.class);
         else if (accountRequestDto.getAccountType().equals(AccountType.loan))
-            getErrors(accountRequestDto, SavingsAccountValidation.class, LoanAccountValidation.class);
+            utils.checkForErrors(accountRequestDto, SavingsAccountValidation.class, LoanAccountValidation.class);
 
         // We add this new request to the existing request SET.
         var existingRequests = user.getAccountRequests();
@@ -277,18 +261,6 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public Account depositOrWithdrawFromAccount(User user, Account account, AmountTransaction amountTransaction) {
 
-        // Checking if the account actually belongs to user.
-        if (!user.getUsername().equals(account.getUser().getUsername())) {
-            log.error("Account {} does not belong to {}", account.getId(), user.getUsername());
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "account does not belong to user.");
-        }
-
-        // Checking if the account is actually operational.
-        if (!account.getAccountStatus().equals(AccountStatus.active)) {
-            log.error("The account {} is not active", account.getId());
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "not active");
-        }
-
         // A new transaction object.
         var transaction = constructTransaction(account);
 
@@ -310,15 +282,6 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public Account getAccount(User user, Account account) {
-        // if the account actually belongs to the user.
-        if (account.getUser().getUsername().equals(user.getUsername()))
-            return account;
-        log.error("Account {} does not belong to user {}", account.getId(), user.getUsername());
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "account does not belong to user.");
-    }
-
-    @Override
     public Kyc getDetailsOfCustomer(User user, Kyc kyc) {
         // if the kyc actually belongs to the user.
         if (kyc.getUserName().equals(user.getUsername()))
@@ -327,21 +290,36 @@ public class CustomerServiceImpl implements CustomerService {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "kyc does not belong to user.");
     }
 
+    private Account validateBeforeTransferring(User user, Account sourceAccount, Optional<Account> targetAccount, TransferAmountDto transferAmountDto) {
+
+        log.trace("Validation before transferring funds.");
+        // Checking if the target account is valid/present.
+        if (targetAccount.isEmpty())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Target account invalid.");
+
+        if (sourceAccount.getAccountType().equals(AccountType.loan) || targetAccount.get().getAccountType().equals(AccountType.loan))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Can only send from/to a non loan account.");
+
+        // Checking if the user is trying to transfer amount less than equal to the available balance.
+        if (sourceAccount.getAccountType().equals(AccountType.savings)) {
+            if (sourceAccount.getBalance() - transferAmountDto.getAmount() < properties.getMinBalanceSavings())
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Amount transfer request exceeds current balance.");
+        } else if (sourceAccount.getBalance() - transferAmountDto.getAmount() < 0)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Amount transfer request exceeds current balance.");
+
+        if (sourceAccount.getId().equals(transferAmountDto.getAccountId()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot send to same account.");
+
+        return targetAccount.get();
+    }
+
     @Override
     public ResponseEntity<?> transferAmount(User user, Account account, TransferAmountDto transferAmountDto) {
         // Checking if the target account id is valid.
         var targetAccount = accountRepository.findById(transferAmountDto.getAccountId());
-        if (targetAccount.isEmpty())
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Target account invalid.");
-        if (account.getBalance() - transferAmountDto.getAmount() < 0)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Amount transfer request exceeds current balance.");
-        if (account.getAccountType().equals(AccountType.loan) || targetAccount.get().getAccountType().equals(AccountType.loan))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Can only send from/to a non loan account.");
-        if (account.getId().equals(transferAmountDto.getAccountId()))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot send to same account.");
 
         log.trace("Initiated transfer of funds.");
-        var receiver = targetAccount.get();
+        var receiver = validateBeforeTransferring(user, account, targetAccount, transferAmountDto);
         var transactionSender = constructTransaction(account).setBalancePriorTransaction(account.getBalance());
         var transactionReceiver = constructTransaction(receiver).setBalancePriorTransaction(receiver.getBalance());
 
@@ -362,5 +340,23 @@ public class CustomerServiceImpl implements CustomerService {
 
         accountRepository.saveAll(List.of(account, receiver));
         return ResponseEntity.ok("Transferred Successfully.");
+    }
+
+    @Override
+    public ResponseEntity<?> closeAccount(User user, Account account) {
+        if (!account.getUser().getUsername().equals(user.getUsername()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "account does not belong to user.");
+        if (account.getAccountStatus().equals(AccountStatus.closed))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "account is already closed.");
+
+        if (account.getBalance() < properties.getMinBalanceAllowedToClose()) {
+            if (account.getAccountType().equals(AccountType.current) &&
+                    user.getAccounts().stream().filter(account1 -> account1.getAccountType().equals(AccountType.loan)).anyMatch(loan -> loan.getAccountStatus().equals(AccountStatus.active))) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "please close existing loan accounts. to close current account");
+            }
+            accountRepository.save(account.setAccountStatus(AccountStatus.closed));
+            return ResponseEntity.ok("Closed account Successfully.");
+        }
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "please withdraw existing amount.");
     }
 }

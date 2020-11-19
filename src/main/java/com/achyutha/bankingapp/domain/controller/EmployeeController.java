@@ -61,7 +61,7 @@ public class EmployeeController {
     }
 
     /**
-     * To get information of an admin.
+     * To get information of an employee.
      *
      * @param user The user matching id.
      * @return The User object.
@@ -96,7 +96,7 @@ public class EmployeeController {
      * @param user The user.
      * @return List of customers.
      */
-    @GetMapping("/{id}/users")
+    @GetMapping("/{id}/customers")
     @PreAuthorize("hasRole('EMPLOYEE')")
     public List<User> getAllCustomers(@PathVariable("id") User user) {
         isActive(user);
@@ -110,7 +110,7 @@ public class EmployeeController {
      * @param signUpRequest The employee signupRequest object.
      * @return The response, with newly created employee username.
      */
-    @PostMapping("/{id}/users/add")
+    @PostMapping("/{id}/customers/add")
     @PreAuthorize("hasRole('EMPLOYEE')")
     public ResponseEntity<?> addCustomer(@PathVariable("id") User user,
                                          @RequestBody SignUpRequest signUpRequest) {
@@ -124,7 +124,7 @@ public class EmployeeController {
      *
      * @return Response entity.
      */
-    @GetMapping("/{id}/users/kyc")
+    @GetMapping("/{id}/customers/kyc")
     @PreAuthorize("hasRole('EMPLOYEE')")
     public List<Kyc> getAllPendingKyc(@PathVariable("id") User user) {
         isActive(user);
@@ -139,7 +139,7 @@ public class EmployeeController {
      * @param kyc The Kyc information in question.
      * @return Response entity.
      */
-    @PutMapping("/{id}/users/kyc/{kycId}")
+    @PutMapping("/{id}/customers/kyc/{kycId}")
     @PreAuthorize("hasRole('EMPLOYEE')")
     public ResponseEntity<?> processKyc(@PathVariable("id") User user,
                                         @PathVariable("kycId") Kyc kyc,
@@ -149,7 +149,7 @@ public class EmployeeController {
         return employeeService.processKycRequest(kyc, approve);
     }
 
-    @PutMapping("/{id}/users/account/requests/{accountRequestId}")
+    @PutMapping("/{id}/customers/account/requests/{accountRequestId}")
     @PreAuthorize("hasRole('EMPLOYEE')")
     public ResponseEntity<?> processAccountRequest(@PathVariable("id") User user,
                                                    @PathVariable("accountRequestId") AccountRequest accountRequest,
@@ -164,7 +164,7 @@ public class EmployeeController {
      *
      * @return Response entity.
      */
-    @GetMapping("/{id}/users/account/requests")
+    @GetMapping("/{id}/customers/account/requests")
     @PreAuthorize("hasRole('EMPLOYEE')")
     public List<AccountRequest> getAllPendingAccountRequests(@PathVariable("id") User user) {
         isActive(user);
@@ -172,9 +172,15 @@ public class EmployeeController {
         return employeeService.fetchAllPendingAccRequests();
     }
 
-    @DeleteMapping("/{id}/users/{userId}")
+    /**
+     * To delete a customer.
+     * @param user The employee.
+     * @param customer The customer.
+     * @return The response.
+     */
+    @DeleteMapping("/{id}/customers/{userId}")
     @PreAuthorize("hasRole('EMPLOYEE')")
-    public ResponseEntity<?> deleteAccount(@PathVariable("id") User user,
+    public ResponseEntity<?> deleteCustomer(@PathVariable("id") User user,
                                            @PathVariable("userId") User customer) {
         isActive(user);
         log.debug("Fetching all pending account requests approvals.");

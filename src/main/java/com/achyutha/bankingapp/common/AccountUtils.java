@@ -40,7 +40,7 @@ public class AccountUtils {
         log.trace("Adding new transaction to existing ones.");
 
         // Add message only if it was not set previously.
-        if (transaction.getMessage().isBlank() && message != null)
+        if (transaction.getMessage()==null || message != null)
             transaction.setMessage(message);
         transaction.setBalanceAfterTransaction(account.getBalance());
         var existingTransactions = account.getTransactions();

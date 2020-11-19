@@ -149,11 +149,11 @@ public class ExportToPdf {
                 p = new Paragraph(String.format("Total Transactions - %s", transactions.size()), font);
                 p.setAlignment(Paragraph.ALIGN_LEFT);
                 document.add(p);
+                font.setSize(8);
                 headers = EXPORT_TRANSACTION_INFO;
                 table = new PdfPTable(headers.size());
                 table.setWidthPercentage(100f);
                 table.setSpacingBefore(10);
-
                 constructHeaderFromList(table, headers);
                 writeTransactionTableData(table,transactions.stream().sorted(Comparator.comparing(Transaction::getTransactionDate)).collect(Collectors.toList()));
                 document.add(table);

@@ -5,8 +5,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
-import java.util.List;
-
 /**
  * JwtResponse DTO.
  */
@@ -14,15 +12,11 @@ import java.util.List;
 @Setter
 @Accessors(chain = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class JwtResponse {
+public class SignUpResponse {
 
-    private String token;
+    private Long Id;
 
-    private Long id;
+    private String userName;
 
-    private String employeeId;
-
-    private String name;
-
-    private List<String> roles;
+    private String tempPassword;
 }

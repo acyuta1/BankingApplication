@@ -3,6 +3,7 @@ package com.achyutha.bankingapp.auth.service;
 import com.achyutha.bankingapp.auth.dto.JwtResponse;
 import com.achyutha.bankingapp.auth.dto.LoginRequest;
 import com.achyutha.bankingapp.auth.dto.SignUpRequest;
+import com.achyutha.bankingapp.auth.dto.SignUpResponse;
 import com.achyutha.bankingapp.auth.jwt.JwtUtils;
 import com.achyutha.bankingapp.auth.jwt.UserDetailsImpl;
 import com.achyutha.bankingapp.auth.model.Role;
@@ -11,6 +12,9 @@ import com.achyutha.bankingapp.common.validation.group.AdminLevelValidation;
 import com.achyutha.bankingapp.common.validation.group.CustomerLevelValidation;
 import com.achyutha.bankingapp.common.validation.group.EmployeeLevelValidation;
 import com.achyutha.bankingapp.domain.converter.RoleConverter;
+import com.achyutha.bankingapp.domain.model.AccountModels.CurrentAccount;
+import com.achyutha.bankingapp.domain.model.AccountStatus;
+import com.achyutha.bankingapp.domain.model.AccountType;
 import com.achyutha.bankingapp.domain.model.KycVerificationStatus;
 import com.achyutha.bankingapp.domain.model.User;
 import com.achyutha.bankingapp.domain.service.UserRepository;
@@ -28,6 +32,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Validator;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -73,7 +78,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public ResponseEntity<?> signUp(SignUpRequest signUpRequest) {
+    public ResponseEntity<SignUpResponse> signUp(SignUpRequest signUpRequest) {
         // Checking whether a customer with the same email exists already.
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
             log.error("User exists already.");
@@ -102,9 +107,9 @@ public class AuthServiceImpl implements AuthService {
                     .setId(UUID.randomUUID().toString())
                     .setKycVerificationStatus(KycVerificationStatus.verified)
                     .setDob(signUpRequest.getDob());
-            if(signUpRequest.getRole().contains(ROLE_ADMIN))
+            if (signUpRequest.getRole().contains(ROLE_ADMIN))
                 checkForErrors(kyc, AdminLevelValidation.class);
-            if(signUpRequest.getRole().contains(ROLE_EMPLOYEE))
+            if (signUpRequest.getRole().contains(ROLE_EMPLOYEE))
                 checkForErrors(kyc, EmployeeLevelValidation.class);
             user.setKyc(kyc);
 
@@ -114,21 +119,29 @@ public class AuthServiceImpl implements AuthService {
             else
                 user.setEmployeeId(String.format("%s%s", EMPLOYEE_ID_PREFIX, latestId.get().getId() + 1));
 
-            user.setUsername(Utils.generateEmailFromName(user.getFirstName(), user.getEmployeeId())).getKyc().setUserName(user.getUsername());
+            var currentAccount = ((CurrentAccount) new CurrentAccount()
+                    .setEmployer("Bank App")
+                    .setId(UUID.randomUUID().toString())
+                    .setAccountStatus(AccountStatus.active)
+                    .setAccountType(AccountType.current)
+                    .setUser(user));
+
+            user.setUsername(Utils.generateEmailFromName(user.getFirstName(), user.getEmployeeId())).setAccounts(Set.of(currentAccount));
+            kyc.setUserName(user.getUsername());
         } else
             user.setUsername(user.getEmail());
 
         var strRoles = signUpRequest.getRole();
         var roles = new HashSet<Role>();
 
-        // Default role (if role not provided) will be customer.
-        if (strRoles == null)
-            roles.add(roleConverter.convert(ROLE_CUSTOMER));
-        else
-            strRoles.forEach(role -> roles.add(roleConverter.convert(role)));
-
+        // Every user, irrespective of whether an admin, employee will have a current account opened, hence is a customer too.
+        roles.add(roleConverter.convert(ROLE_CUSTOMER));
+        strRoles.forEach(role -> {
+            if (!role.equals(ROLE_CUSTOMER))
+                roles.add(roleConverter.convert(role));
+        });
         userRepository.save(user.setRoles(roles));
-        return ResponseEntity.ok(String.format("User registered successfully! Your company Id- %s, username/email-address - %s", user.getId(), user.getUsername()));
+        return ResponseEntity.ok(new SignUpResponse().setId(user.getId()).setUserName(user.getUsername()));
     }
 
     @Override

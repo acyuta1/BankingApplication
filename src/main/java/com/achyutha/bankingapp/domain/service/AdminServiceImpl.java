@@ -1,6 +1,7 @@
 package com.achyutha.bankingapp.domain.service;
 
 import com.achyutha.bankingapp.auth.dto.SignUpRequest;
+import com.achyutha.bankingapp.auth.dto.SignUpResponse;
 import com.achyutha.bankingapp.auth.model.Role;
 import com.achyutha.bankingapp.auth.service.AuthService;
 import com.achyutha.bankingapp.domain.converter.RoleConverter;
@@ -31,10 +32,9 @@ public class AdminServiceImpl implements AdminService {
     private final RoleConverter roleConverter;
 
     @Override
-    public ResponseEntity<?> addEmployee(SignUpRequest signupRequest) {
-        return ResponseEntity.ok(String.format("%s and password - %s, please update asap to activate account.",
-                authService
-                        .signUp(defaultInit(signupRequest, ROLE_EMPLOYEE)).getBody(), signupRequest.getPassword()));
+    public ResponseEntity<SignUpResponse> addEmployee(SignUpRequest signupRequest) {
+        return ResponseEntity.ok(((SignUpResponse) Objects.requireNonNull(authService
+                .signUp(defaultInit(signupRequest, ROLE_EMPLOYEE)).getBody())).setTempPassword(signupRequest.getPassword()));
     }
 
     @Override

@@ -48,3 +48,4 @@ bank-application-properties:
   transaction-limit-savings: 10
   max-withdraw-limit: 100000
   savings-account-interest-rate: 3.5
+  min-balance-allowed-to-close: 100

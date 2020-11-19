@@ -30,7 +30,16 @@ public class BankAppScheduledJobs {
      */
     @Scheduled(cron = "0 0 18 * * *")
     public void updateInterest() {
+        log.info("Executing Schedule job - Calculating Interest.");
         var savingsAccounts = savingsAccountRepository.findAllByAccountStatus(AccountStatus.active);
+        savingsAccounts = savingsAccounts.stream()
+                .map(account -> {
+                    if (account.getBalance() < 1)
+                        return account;
+                    else {
+                        return account.setInterestAccruedLastMonth(account.getBalance() * ((bankApplicationProperties.getSavingsAccountInterestRate() / 100) / 365));
+                    }
+                }).collect(Collectors.toList());
         final Calendar c = Calendar.getInstance();
         if (c.get(Calendar.DATE) == c.getActualMaximum(Calendar.DATE)) {
             savingsAccounts = savingsAccounts.stream().map(savingsAccount -> {
@@ -41,13 +50,8 @@ public class BankAppScheduledJobs {
                     }
             ).collect(Collectors.toList());
         }
-        savingsAccountRepository.saveAll(savingsAccounts.stream()
-                .map(account -> {
-                    if (account.getBalance() < 1)
-                        return account;
-                    else {
-                        return account.setInterestAccruedLastMonth(account.getBalance() * ((bankApplicationProperties.getSavingsAccountInterestRate() / 100) / 365));
-                    }
-                }).collect(Collectors.toList()));
+
+        savingsAccountRepository.saveAll(savingsAccounts);
+        log.info("Executed Schedule job.");
     }
 }

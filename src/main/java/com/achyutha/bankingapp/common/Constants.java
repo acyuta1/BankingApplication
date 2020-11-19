@@ -22,6 +22,7 @@ public class Constants {
     public static final LocalDate DEFAULT_DATE = LocalDate.of(1996,4,28);
 
     public static final String KYC_NOT_UPDATED = "kyc.not.updated.or.verified";
+    public static final String CUSTOMER_NOT_ACTIVE = "customer.not.active";
     public static final String ACCOUNT_REQUEST_NOT_FOUND = "account.request.not.found";
     public static final String ACCOUNT_NOT_FOUND = "account.not.found";
 

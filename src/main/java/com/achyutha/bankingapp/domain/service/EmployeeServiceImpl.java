@@ -1,9 +1,11 @@
 package com.achyutha.bankingapp.domain.service;
 
 import com.achyutha.bankingapp.auth.dto.SignUpRequest;
+import com.achyutha.bankingapp.auth.dto.SignUpResponse;
 import com.achyutha.bankingapp.auth.model.Role;
 import com.achyutha.bankingapp.auth.service.AuthService;
 import com.achyutha.bankingapp.common.BankApplicationProperties;
+import com.achyutha.bankingapp.common.Utils;
 import com.achyutha.bankingapp.common.validation.group.CurrentAccountValidation;
 import com.achyutha.bankingapp.common.validation.group.EmployeeLevelValidation;
 import com.achyutha.bankingapp.common.validation.group.LoanAccountValidation;
@@ -23,7 +25,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.validation.Validator;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -49,9 +50,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     private final BankApplicationProperties properties;
 
-    private final KycRepository kycRepository;
+    private final Utils utils;
 
-    private final Validator validator;
+    private final KycRepository kycRepository;
 
     private final SavingsAccountRepository savingsAccountRepository;
 
@@ -79,7 +80,7 @@ public class EmployeeServiceImpl implements EmployeeService {
      */
     private void createSavingsAccount(AccountRequest accountRequest) {
         //  Validating errors.
-        getErrors(accountRequest, SavingsAccountValidation.class);
+        utils.checkForErrors(accountRequest, SavingsAccountValidation.class);
 
         // Creating Savings account, now that validation was successful.
         savingsAccountRepository.save((SavingsAccount) new SavingsAccount()
@@ -100,7 +101,7 @@ public class EmployeeServiceImpl implements EmployeeService {
      */
     private void createCurrentAccount(AccountRequest accountRequest) {
         //  Validating errors.
-        getErrors(accountRequest, SavingsAccountValidation.class, CurrentAccountValidation.class);
+        utils.checkForErrors(accountRequest, SavingsAccountValidation.class, CurrentAccountValidation.class);
 
         // Checking if a current account already exists. Only one current account per user is allowed.
         var currentAccounts = accountRequestRepository
@@ -131,7 +132,7 @@ public class EmployeeServiceImpl implements EmployeeService {
      */
     private void createLoanAccount(AccountRequest accountRequest) {
         //  Validating errors.
-        getErrors(accountRequest, SavingsAccountValidation.class, LoanAccountValidation.class);
+        utils.checkForErrors(accountRequest, SavingsAccountValidation.class, LoanAccountValidation.class);
 
         /*
         Checking if a user has a current account.
@@ -174,22 +175,15 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public User updateEmployee(User user, UpdateAfterCreation updateAfterCreation) {
         // Validating employee object.
-        var errors = validator.validate(updateAfterCreation, EmployeeLevelValidation.class);
-
-        if (errors.isEmpty()) {
-            log.debug("User validation successful. Employee is now active.");
-            return userRepository.save(user.setDob(updateAfterCreation.getDob()).setPassword(encoder.encode(updateAfterCreation.getPassword())).setUserStatus(UserStatus.active));
-        } else {
-            log.error("Errors during validation.");
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, errors.toString());
-        }
+        utils.checkForErrors(updateAfterCreation, EmployeeLevelValidation.class);
+        log.debug("User validation successful. Employee is now active.");
+        return userRepository.save(user.setDob(updateAfterCreation.getDob()).setPassword(encoder.encode(updateAfterCreation.getPassword())).setUserStatus(UserStatus.active));
     }
 
     @Override
     public ResponseEntity<?> addCustomer(SignUpRequest signUpRequest) {
-        return ResponseEntity.ok(String.format("%s and password - %s, please update asap to activate account.",
-                authService
-                        .signUp(defaultInit(signUpRequest, ROLE_CUSTOMER)).getBody(), signUpRequest.getPassword()));
+        return ResponseEntity.ok(((SignUpResponse) Objects.requireNonNull(authService
+                .signUp(defaultInit(signUpRequest, ROLE_CUSTOMER)).getBody())).setTempPassword(signUpRequest.getPassword()));
     }
 
     @Override
@@ -218,14 +212,6 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public List<Kyc> fetchAllPendingKyc() {
         return kycRepository.findAllByKycVerificationStatus(KycVerificationStatus.pending);
-    }
-
-    private void getErrors(AccountRequest accountRequest, Class<?>... classes) {
-        var errors = validator.validate(accountRequest, classes);
-        if (errors.size() > 0) {
-            accountRequestRepository.save(accountRequest.setAccountRequestStatus(AccountRequestStatus.rejected));
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "errors: " + errors.toString());
-        }
     }
 
     @Override
@@ -280,6 +266,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         var roles = customer.getRoles().stream().map(Role::getName).collect(Collectors.toList());
 
         // Only customers can be deleted. (Since an employee or an admin can be a user too, we must distinguish first.
+        System.out.println(roles);
         if (roles.size() == 1 && roles.get(0).equals(ROLE_CUSTOMER)) {
             var accounts = customer.getAccounts();
             for (Account account : accounts) {
@@ -292,6 +279,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             // Soft deletion, since records are crucial.
             log.error("Soft deletion of user {}.", customer.getUsername());
             userRepository.save(customer.setUserStatus(UserStatus.inactive));
+            return ResponseEntity.ok("Deleted successfully.");
         }
         log.error("Customer {} is not eligible for deletion", customer.getUsername());
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Customer is not eligible for deletion.");

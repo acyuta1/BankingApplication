@@ -48,14 +48,6 @@ public interface CustomerService {
     List<? extends Account> fetchAllAccountsOfUsers(User user);
 
     /**
-     * To fetch account of a user.
-     * @param user The user.
-     * @param account The account.
-     * @return The account post verification.
-     */
-    Account getAccount(User user, Account account);
-
-    /**
      * Fetch kyc of a customer.
      * @param user The user.
      * @param kyc The kyc.

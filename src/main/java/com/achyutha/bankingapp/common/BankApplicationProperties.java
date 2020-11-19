@@ -17,4 +17,5 @@ public class BankApplicationProperties {
     Integer transactionLimitSavings;
     Integer maxWithdrawLimit;
     Double savingsAccountInterestRate;
+    Double minBalanceAllowedToClose;
 }
