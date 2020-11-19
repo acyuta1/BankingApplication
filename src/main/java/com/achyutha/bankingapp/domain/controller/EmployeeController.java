@@ -8,7 +8,6 @@ import com.achyutha.bankingapp.domain.model.Kyc;
 import com.achyutha.bankingapp.domain.model.User;
 import com.achyutha.bankingapp.domain.model.UserStatus;
 import com.achyutha.bankingapp.domain.service.EmployeeService;
-import com.achyutha.bankingapp.domain.service.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -18,7 +17,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.validation.Valid;
 import java.util.List;
 
 /**
@@ -35,31 +33,34 @@ public class EmployeeController {
 
     private final UserDetailsServiceImpl userDetailsService;
 
-    private final UserRepository userRepository;
-
     /**
      * Compares whether the current user is equal to the logged in user.
+     *
      * @param user The user.
      */
     private void compareUserName(String user) {
-        if (!user.equals(userDetailsService.getCurrentLoggedInUser()))
+        if (!user.equals(userDetailsService.getCurrentLoggedInUser())) {
+            log.error("Logged in user does not match with requesting user.");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "logged in user trying to alter other user.");
+        }
     }
 
     /**
      * To check whether an employee is active.
      *
-     * @param username The user name of employee.
+     * @param user The user/employee.
      */
-    private void isActive(String username) {
-        compareUserName(username);
-        var user = userRepository.findByUsername(username);
-        if (user.isEmpty() || !user.get().getUserStatus().equals(UserStatus.active))
+    private void isActive(User user) {
+        log.debug("Comparing username against logged in username");
+        compareUserName(user.getUsername());
+        // Checking if the user is active.
+        if (!user.getUserStatus().equals(UserStatus.active)) {
+            log.error("Employee is either inactive or does not exist.");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "logged in user is not active.");
+        }
     }
 
     /**
-     * //todo: get employee must only get employees and customers
      * To get information of an admin.
      *
      * @param user The user matching id.
@@ -68,6 +69,8 @@ public class EmployeeController {
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('EMPLOYEE')")
     public User getEmployee(@PathVariable("id") User user) {
+        isActive(user);
+        log.debug("Fetched user: {}", user.getUsername());
         return user;
     }
 
@@ -80,10 +83,25 @@ public class EmployeeController {
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('EMPLOYEE')")
-    public User updateEmployee(@PathVariable("id") User user,
-                               @RequestBody UpdateAfterCreation updateAfterCreation) {
+    public User mandatoryUpdate(@PathVariable("id") User user,
+                                @RequestBody UpdateAfterCreation updateAfterCreation) {
         compareUserName(user.getUsername());
+        log.debug("Updating employee: {}", user.getUsername());
         return employeeService.updateEmployee(user, updateAfterCreation);
+    }
+
+    /**
+     * To fetch all customers.
+     *
+     * @param user The user.
+     * @return List of customers.
+     */
+    @GetMapping("/{id}/users")
+    @PreAuthorize("hasRole('EMPLOYEE')")
+    public List<User> getAllCustomers(@PathVariable("id") User user) {
+        isActive(user);
+        log.debug("Fetching all Customers.");
+        return employeeService.fetchAllCustomers();
     }
 
     /**
@@ -92,11 +110,12 @@ public class EmployeeController {
      * @param signUpRequest The employee signupRequest object.
      * @return The response, with newly created employee username.
      */
-    @PostMapping("/{id}/add")
+    @PostMapping("/{id}/users/add")
     @PreAuthorize("hasRole('EMPLOYEE')")
     public ResponseEntity<?> addCustomer(@PathVariable("id") User user,
-                                         @RequestBody @Valid SignUpRequest signUpRequest) {
-        isActive(user.getUsername());
+                                         @RequestBody SignUpRequest signUpRequest) {
+        isActive(user);
+        log.debug("Adding new customer with username {}", user.getUsername());
         return employeeService.addCustomer(signUpRequest);
     }
 
@@ -105,10 +124,11 @@ public class EmployeeController {
      *
      * @return Response entity.
      */
-    @GetMapping("/{id}/kyc")
+    @GetMapping("/{id}/users/kyc")
     @PreAuthorize("hasRole('EMPLOYEE')")
     public List<Kyc> getAllPendingKyc(@PathVariable("id") User user) {
-        isActive(user.getUsername());
+        isActive(user);
+        log.debug("Fetching all pending kyc approvals.");
         return employeeService.fetchAllPendingKyc();
     }
 
@@ -119,21 +139,23 @@ public class EmployeeController {
      * @param kyc The Kyc information in question.
      * @return Response entity.
      */
-    @PutMapping("/{id}/kyc/{kycId}")
+    @PutMapping("/{id}/users/kyc/{kycId}")
     @PreAuthorize("hasRole('EMPLOYEE')")
     public ResponseEntity<?> processKyc(@PathVariable("id") User user,
                                         @PathVariable("kycId") Kyc kyc,
                                         @RequestParam("approve") Boolean approve) {
-        isActive(user.getUsername());
+        isActive(user);
+        log.debug("Processing a kyc request.");
         return employeeService.processKycRequest(kyc, approve);
     }
 
-    @PutMapping("/{id}/account/requests/{accountRequestId}")
+    @PutMapping("/{id}/users/account/requests/{accountRequestId}")
     @PreAuthorize("hasRole('EMPLOYEE')")
     public ResponseEntity<?> processAccountRequest(@PathVariable("id") User user,
                                                    @PathVariable("accountRequestId") AccountRequest accountRequest,
                                                    @RequestParam("approve") Boolean approve) {
-        isActive(user.getUsername());
+        isActive(user);
+        log.debug("Processing an account request.");
         return employeeService.processAccRequest(accountRequest, approve);
     }
 
@@ -142,12 +164,21 @@ public class EmployeeController {
      *
      * @return Response entity.
      */
-    @GetMapping("/{id}/account/requests")
+    @GetMapping("/{id}/users/account/requests")
     @PreAuthorize("hasRole('EMPLOYEE')")
     public List<AccountRequest> getAllPendingAccountRequests(@PathVariable("id") User user) {
-        isActive(user.getUsername());
+        isActive(user);
+        log.debug("Fetching all pending account requests approvals.");
         return employeeService.fetchAllPendingAccRequests();
     }
 
+    @DeleteMapping("/{id}/users/{userId}")
+    @PreAuthorize("hasRole('EMPLOYEE')")
+    public ResponseEntity<?> deleteAccount(@PathVariable("id") User user,
+                                           @PathVariable("userId") User customer) {
+        isActive(user);
+        log.debug("Fetching all pending account requests approvals.");
+        return employeeService.deleteCustomer(user, customer);
+    }
 
 }

@@ -47,3 +47,4 @@ bank-application-properties:
   min-balance-savings: 300
   transaction-limit-savings: 10
   max-withdraw-limit: 100000
+  savings-account-interest-rate: 3.5

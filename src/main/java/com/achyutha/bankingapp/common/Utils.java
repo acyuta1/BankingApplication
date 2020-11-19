@@ -3,9 +3,6 @@ package com.achyutha.bankingapp.common;
 import com.achyutha.bankingapp.auth.dto.SignUpRequest;
 import com.achyutha.bankingapp.auth.jwt.UserDetailsServiceImpl;
 import com.achyutha.bankingapp.auth.model.RoleType;
-import com.achyutha.bankingapp.domain.model.AccountModels.Account;
-import com.achyutha.bankingapp.domain.model.AccountModels.SavingsAccount;
-import com.achyutha.bankingapp.domain.model.AccountType;
 import com.achyutha.bankingapp.domain.model.UserStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,8 +10,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.achyutha.bankingapp.common.Constants.*;
 
@@ -24,9 +24,13 @@ import static com.achyutha.bankingapp.common.Constants.*;
 public class Utils {
 
     private final UserDetailsServiceImpl userDetailsService;
+
+    private final Validator validator;
+
     /**
      * To generate an email for the newly registered employee, with first-name and employeeId (unique).
-     * @param firstName The first name.
+     *
+     * @param firstName  The first name.
      * @param employeeId The employee id.
      * @return The email id.
      */
@@ -38,17 +42,19 @@ public class Utils {
 
     /**
      * A temporary password, generated from the UUID's first 12 alphabetic + numeric chars.
+     *
      * @return The temporary password.
      */
-    public static String generateTemporaryPassword(){
-        return UUID.randomUUID().toString().replaceAll("[^a-zA-Z0-9]","").substring(12);
+    public static String generateTemporaryPassword() {
+        return UUID.randomUUID().toString().replaceAll("[^a-zA-Z0-9]", "").substring(12);
     }
 
     /**
      * Initializes default values -- to password, dob.
+     *
      * @return The updated sign up request object.
      */
-    public static SignUpRequest defaultInit(SignUpRequest signupRequest, RoleType roleType){
+    public static SignUpRequest defaultInit(SignUpRequest signupRequest, RoleType roleType) {
         return signupRequest
                 .setPassword(generateTemporaryPassword())
                 .setUserStatus(UserStatus.initial)
@@ -56,11 +62,19 @@ public class Utils {
                 .setRole(Set.of(roleType));
     }
 
-    public static <T extends Account> Account getDerivedClassInstance(AccountType accountType){
-
-        if(accountType.equals(AccountType.savings))
-            return new SavingsAccount();
-
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "no such type");
+    /**
+     * To validate an object provided with validation group.
+     * @param object The object being validated.
+     * @param classes The classes.
+     */
+    public void checkForErrors(Object object, Class<?>... classes) {
+        var errors = validator.validate(object, classes);
+        if (errors.size() > 0) {
+            log.trace("Found error while validating account request dto");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("errors: %s",
+                    errors.stream().map(ConstraintViolation::getMessage).collect(Collectors.joining(" "))));
+        }
     }
+
+
 }

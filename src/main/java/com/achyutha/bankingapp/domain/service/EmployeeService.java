@@ -53,4 +53,18 @@ public interface EmployeeService {
      * @return List of Account request.
      */
     List<AccountRequest> fetchAllPendingAccRequests();
+
+    /**
+     * Fetch all users with role 'CUSTOMER'.
+     * @return The list of customers.
+     */
+    List<User> fetchAllCustomers();
+
+    /**
+     * To delete a customer.
+     * @param user The employee.
+     * @param customer The customer.
+     * @return Response.
+     */
+    ResponseEntity<?> deleteCustomer(User user, User customer);
 }

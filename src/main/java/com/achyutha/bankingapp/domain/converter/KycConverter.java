@@ -19,10 +19,10 @@ public class KycConverter implements Converter<String, Kyc> {
     private final KycRepository kycRepository;
 
     /**
-     * Fetches a user when the id is provided.
+     * Fetches kyc the id is provided.
      *
      * @param id String
-     * @return user.
+     * @return kyc.
      */
     @Override
     public Kyc convert(String id) {

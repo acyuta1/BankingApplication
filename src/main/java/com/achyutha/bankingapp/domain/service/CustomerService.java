@@ -71,4 +71,12 @@ public interface CustomerService {
      * @return The response.
      */
     ResponseEntity<?> transferAmount(User user, Account account, TransferAmountDto transferAmountDto);
+
+    /**
+     * Close account of a user.
+     * @param user The user.
+     * @param account The account linked to user.
+     * @return The response.
+     */
+    ResponseEntity<?> closeAccount(User user, Account account);
 }

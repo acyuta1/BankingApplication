@@ -16,15 +16,16 @@ public interface AdminService {
     ResponseEntity<?> addEmployee(SignUpRequest signupRequest);
 
     /**
+     * Fetch all employees.
+     * @return List of employees.
+     */
+    List<User> getAllEmployees();
+
+    /**
      * To delete an existing employee.
      * @param user The user to be deleted.
      * @return The response.
      */
     ResponseEntity<?> deleteEmployee(User user);
 
-    /**
-     * Fetch all employees.
-     * @return List of employees.
-     */
-    List<User> getAllEmployees();
 }

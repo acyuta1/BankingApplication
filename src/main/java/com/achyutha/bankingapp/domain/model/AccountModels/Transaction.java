@@ -11,7 +11,7 @@ import lombok.experimental.Accessors;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity()
 @Table(name = "transaction")
@@ -32,7 +32,7 @@ public class Transaction {
     @NotNull(message = "post.balance.null")
     private Double balanceAfterTransaction;
 
-    private LocalDate transactionDate;
+    private LocalDateTime transactionDate;
 
     private String message;
 

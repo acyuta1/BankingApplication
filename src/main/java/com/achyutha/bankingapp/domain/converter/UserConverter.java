@@ -12,9 +12,9 @@ import org.springframework.web.server.ResponseStatusException;
 import static com.achyutha.bankingapp.common.Constants.USER_NOT_FOUND;
 
 @Slf4j
-@Component
 @RequiredArgsConstructor
-public class UserConverter implements Converter<Long, User> {
+@Component
+public class UserConverter implements Converter<String, User> {
 
     private final UserRepository userRepository;
 
@@ -25,10 +25,10 @@ public class UserConverter implements Converter<Long, User> {
      * @return user.
      */
     @Override
-    public User convert(Long id) {
+    public User convert(String id) {
         System.out.println("here");
         System.out.println(id);
-        return userRepository.findById(id)
+        return userRepository.findById(Long.parseLong(id))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND));
     }
 }

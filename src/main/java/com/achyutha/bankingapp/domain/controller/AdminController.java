@@ -22,50 +22,56 @@ import java.util.List;
 @RequestMapping("/api/admin")
 public class AdminController {
 
-    private  final AdminService adminService;
+    private final AdminService adminService;
 
     /**
      * To get information of an admin.
+     *
      * @param user The user matching id.
      * @return The User object.
      */
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public User getAdmin(@PathVariable("id") User user)
-    {
+    public User getAdmin(@PathVariable("id") User user) {
+        log.debug("User fetched: {}", user);
         return user;
     }
 
     /**
      * To add a new employee.
-     * @param signupRequest The employee signupRequest object.
+     *
+     * @param signUpRequest The employee signUpRequest object.
      * @return The response, with newly created employee username.
      */
     @PostMapping("/employees/add")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> addEmployee(@RequestBody SignUpRequest signupRequest){
-        return adminService.addEmployee(signupRequest);
+    public ResponseEntity<?> addEmployee(@RequestBody SignUpRequest signUpRequest) {
+        log.debug("Adding new employee with email: {}", signUpRequest.getEmail());
+        return adminService.addEmployee(signUpRequest);
+    }
+
+    /**
+     * Fetch all users having EMPLOYEE as the role.
+     *
+     * @return List of users.
+     */
+    @GetMapping("/employees")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<User> getAllEmployeeUsers() {
+        log.debug("Fetching all employees.");
+        return adminService.getAllEmployees();
     }
 
     /**
      * To add a new employee.
+     *
      * @param user The employee signupRequest object.
      * @return The response, with newly created employee username.
      */
     @DeleteMapping("/employees/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> deleteEmployee(@PathVariable("id") User user){
+    public ResponseEntity<?> deleteEmployee(@PathVariable("id") User user) {
+        log.debug("Deleting employee with username: {}", user.getUsername());
         return adminService.deleteEmployee(user);
     }
-
-    /**
-     * Fetch all users having EMPLOYEE as the role.
-     * @return List of users.
-     */
-    @GetMapping("/employees")
-    @PreAuthorize("hasRole('ADMIN')")
-    public List<User> getAllEmployeeUsers(){
-        return adminService.getAllEmployees();
-    }
-
 }

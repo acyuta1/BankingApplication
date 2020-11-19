@@ -24,16 +24,6 @@ import javax.validation.Valid;
 @RequestMapping("/api/auth")
 public class AuthenticationController {
 
-//    private final AuthenticationManager authenticationManager;
-
-//    private final UserRepository userRepository;
-//
-//    private final RoleRepository roleRepository;
-//
-//    private final PasswordEncoder encoder;
-
-//    private final JwtUtils jwtUtils;
-//
     private final AuthService authService;
 
     /**
@@ -58,9 +48,4 @@ public class AuthenticationController {
         return authService.signUp(signUpRequest);
     }
 
-//    @RequestMapping("/logout")
-//    public String logout(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-//        JwtUtil.invalidateRelatedTokens(httpServletRequest);
-//        CookieUtil.clear(httpServletResponse, jwtTokenCookieName);
-//    }
 }
