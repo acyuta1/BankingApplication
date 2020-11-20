@@ -317,7 +317,7 @@ public class CustomerServiceImpl implements CustomerService {
         } else if (sourceAccount.getBalance() - transferAmountDto.getAmount() < 0)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Amount transfer request exceeds current balance.");
 
-        if (sourceAccount.getId().equals(transferAmountDto.getAccountId()))
+        if (sourceAccount.getId().equals(transferAmountDto.getTargetAccountId()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot send to same account.");
 
         return targetAccount.get();
@@ -326,7 +326,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public ResponseEntity<?> transferAmount(User user, Account account, TransferAmountDto transferAmountDto) {
         // Checking if the target account id is valid.
-        var targetAccount = accountRepository.findById(transferAmountDto.getAccountId());
+        var targetAccount = accountRepository.findById(transferAmountDto.getTargetAccountId());
 
         log.trace("Initiated transfer of funds.");
         var receiver = validateBeforeTransferring(user, account, targetAccount, transferAmountDto);

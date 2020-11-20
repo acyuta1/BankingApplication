@@ -15,7 +15,7 @@ import javax.validation.constraints.NotNull;
 public class TransferAmountDto {
 
     @NotNull(message = "transfer.amount.accountid.null")
-    private String accountId;
+    private String targetAccountId;
 
     @NotNull(message = "transfer.amount.amount.null")
     private Long amount;

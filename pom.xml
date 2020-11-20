@@ -12,6 +12,7 @@
     </parent>
     <properties>
         <java.version>11</java.version>
+        <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
     </properties>
 
     <groupId>org.example</groupId>
@@ -100,5 +101,58 @@
         </dependency>
 
     </dependencies>
+
+    <build>
+    <plugins>
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+        </plugin>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-release-plugin</artifactId>
+            <version>${maven-release-plugin.version}</version>
+            <configuration>
+                <goals>install</goals>
+                <checkModificationExcludes>
+                    <checkModificationExclude>pom.xml</checkModificationExclude>
+                    <checkModificationExclude>src/main/api-doc/*</checkModificationExclude>
+                </checkModificationExcludes>
+            </configuration>
+        </plugin>
+        <plugin>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>${maven-compiler-plugin.version}</version>
+            <configuration>
+                <source>11</source>
+                <target>11</target>
+            </configuration>
+        </plugin>
+
+
+        <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <version>${maven-resources-plugin.version}</version>
+            <executions>
+                <execution>
+                    <id>copy-react-resources</id>
+                    <goals>
+                        <goal>copy-resources</goal>
+                    </goals>
+                    <phase>prepare-package</phase>
+                    <configuration>
+                        <outputDirectory>${project.build.outputDirectory}/public</outputDirectory>
+                        <resources>
+                            <resource>
+                                <directory>${project.basedir}/src/main/ui/build</directory>
+                                <filtering>false</filtering>
+                            </resource>
+                        </resources>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
 
 </project>

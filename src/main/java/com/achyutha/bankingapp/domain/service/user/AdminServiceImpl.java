@@ -7,6 +7,7 @@ import com.achyutha.bankingapp.auth.service.AuthService;
 import com.achyutha.bankingapp.common.Utils;
 import com.achyutha.bankingapp.domain.converter.RoleConverter;
 import com.achyutha.bankingapp.domain.model.User;
+import com.achyutha.bankingapp.domain.model.enums.UserStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -55,11 +56,25 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public ResponseEntity<?> deleteEmployee(User user) {
         // Can only delete non admin users.
-        if (user.getRoles().stream().map(Role::getName).collect(Collectors.toSet()).contains(ROLE_ADMIN)) {
+        var roles = user.getRoles().stream().map(Role::getName).collect(Collectors.toSet());
+        if (roles.contains(ROLE_ADMIN)) {
             log.error("Attempting to delete admin user.");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format(CANNOT_DELETE_ADMIN, user.getUsername()));
         }
-        userRepository.delete(user);
+        if (!roles.contains(ROLE_EMPLOYEE))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot delete a customer.");
+        if(user.getUserStatus().equals(UserStatus.inactive))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User is already inactive");
+        userRepository.save(user.setUserStatus(UserStatus.inactive));
         return ResponseEntity.ok(String.format(USER_DELETED_SUCCESS, user.getFirstName()));
     }
+
+    @Override
+    public ResponseEntity<?> reactivate(User user) {
+        if(user.getUserStatus().equals(UserStatus.active))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User is already active");
+        userRepository.save(user.setUserStatus(UserStatus.active));
+        return ResponseEntity.ok(String.format("%s reactivated successfully.", user.getFirstName()));
+    }
+
 }

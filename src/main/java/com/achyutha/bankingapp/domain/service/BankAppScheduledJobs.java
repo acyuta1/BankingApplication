@@ -61,7 +61,8 @@ public class BankAppScheduledJobs {
         if (c.get(Calendar.DATE) == c.getActualMaximum(Calendar.DATE)) {
             savingsAccounts = savingsAccounts.stream().map(savingsAccount -> {
                         var transaction = constructTransaction(savingsAccount);
-                        savingsAccount.setBalance(savingsAccount.getBalance() + savingsAccount.getInterestAccruedLastMonth());
+                        savingsAccount.setTransactionsRemaining(bankApplicationProperties.getTransactionLimitSavings())
+                                .setBalance(savingsAccount.getBalance() + savingsAccount.getInterestAccruedLastMonth());
                         return (SavingsAccount) savingsAccount.setInterestAccruedLastMonth(0.0)
                                 .setTransactions(setTransactionValues(transaction, savingsAccount, String.format("Interest Accrued for month %s", c.get(Calendar.MONTH))));
                     }

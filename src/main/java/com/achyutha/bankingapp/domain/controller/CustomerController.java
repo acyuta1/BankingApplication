@@ -176,7 +176,7 @@ public class CustomerController {
                                             @RequestBody @Valid TransferAmountDto transferAmountDto) {
         checkForAccountValidity(user, account, true);
         log.trace("Transfer request from account {} to account {} by user {}",
-                account.getId(), transferAmountDto.getAccountId(), user.getUsername());
+                account.getId(), transferAmountDto.getTargetAccountId(), user.getUsername());
         return customerService.transferAmount(user, account, transferAmountDto);
     }
 

@@ -279,7 +279,6 @@ public class EmployeeServiceImpl implements EmployeeService {
         var roles = customer.getRoles().stream().map(Role::getName).collect(Collectors.toList());
 
         // Only customers can be deleted. (Since an employee or an admin can be a user too, we must distinguish first.
-        System.out.println(roles);
         if (roles.size() == 1 && roles.get(0).equals(ROLE_CUSTOMER)) {
             var accounts = customer.getAccounts();
             for (Account account : accounts) {

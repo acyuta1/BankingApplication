@@ -28,4 +28,5 @@ public interface AdminService {
      */
     ResponseEntity<?> deleteEmployee(User user);
 
+    ResponseEntity<?> reactivate(User user);
 }
