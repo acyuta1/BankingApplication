@@ -47,7 +47,12 @@ public class AuthenticationController {
      */
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignUpRequest signUpRequest) {
-        if(signUpRequest.getRole().contains(RoleType.ROLE_ADMIN)) {
+        var roles = signUpRequest.getRole();
+        if(roles.contains(RoleType.ROLE_ADMIN)) {
+            if(!roles.contains(RoleType.ROLE_EMPLOYEE)) {
+                roles.add(RoleType.ROLE_EMPLOYEE);
+                signUpRequest.setRole(roles);
+            }
             return authService.signUp(signUpRequest);
         }
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot Add a non-admin user directly.");
