@@ -26,13 +26,13 @@ import static com.achyutha.bankingapp.domain.model.enums.RepaymentTenure.year1;
 public class LoanAccount extends Account {
 
     @Range(min = 100000)
-    @NotNull(message = "loan.is.null")
+    @NotNull(message = "loan.account.loan.is.null")
     private Long loanAmount;
 
-    @NotNull(message = "loan.repayment.is.empty")
+    @NotNull(message = "loan.account.loan.repayment.is.empty")
     private Double lastRepayment = 0.0;
 
-    @NotNull(message = "repayment.tenure.is.empty")
+    @NotNull(message = "loan.account.repayment.tenure.is.empty")
     private RepaymentTenure repaymentTenure = year1;
 
 }

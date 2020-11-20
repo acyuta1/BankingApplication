@@ -19,18 +19,18 @@ import java.time.LocalDate;
 @Accessors(chain = true)
 public class UpdateAfterCreation {
 
-    @NotBlank(message = "password.empty", groups = {CustomerLevelValidation.class, EmployeeLevelValidation.class})
+    @NotBlank(message = "update.password.empty", groups = {CustomerLevelValidation.class, EmployeeLevelValidation.class})
     @Size(min = 7, max = 120, groups = {CustomerLevelValidation.class, EmployeeLevelValidation.class})
     String password;
 
-    @NotNull(message = "dob.is.null", groups = {CustomerLevelValidation.class, EmployeeLevelValidation.class})
+    @NotNull(message = "update.dob.is.null", groups = {CustomerLevelValidation.class, EmployeeLevelValidation.class})
     LocalDate dob;
 
-    @NotBlank(message = "aadhar.number.required", groups = CustomerLevelValidation.class)
+    @NotBlank(message = "update.aadhar.number.required", groups = CustomerLevelValidation.class)
     @Size(min = 12, max = 12)
     private String aadharNumber;
 
-    @NotBlank(message = "pan.card.id.required", groups = CustomerLevelValidation.class)
+    @NotBlank(message = "update.pan.card.id.required", groups = CustomerLevelValidation.class)
     @Size(min = 10, max = 10)
     private String panCard;
 }

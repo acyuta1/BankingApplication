@@ -14,10 +14,10 @@ import javax.validation.constraints.NotNull;
 @Accessors(chain = true)
 public class TransferAmountDto {
 
-    @NotNull
+    @NotNull(message = "transfer.amount.accountid.null")
     private String accountId;
 
-    @NotNull
+    @NotNull(message = "transfer.amount.amount.null")
     private Long amount;
 
 

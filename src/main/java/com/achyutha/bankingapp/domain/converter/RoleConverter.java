@@ -20,15 +20,13 @@ public class RoleConverter implements Converter<RoleType, Role> {
     private final RoleRepository roleRepository;
 
     /**
-     * Fetches a user when the id is provided.
+     * Fetches a Role when the RoleType is provided.
      *
      * @param roleType String
      * @return user.
      */
     @Override
     public Role convert(RoleType roleType) {
-        System.out.println("here");
-        System.out.println(roleType);
         return roleRepository.findByName(roleType)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND));
     }

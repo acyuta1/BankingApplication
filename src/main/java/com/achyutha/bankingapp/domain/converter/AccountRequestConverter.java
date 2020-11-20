@@ -19,10 +19,10 @@ public class AccountRequestConverter implements Converter<String, AccountRequest
     private final AccountRequestRepository accountRequestRepository;
 
     /**
-     * Fetches a user when the id is provided.
+     * Fetches an Acount Request when the id is provided.
      *
      * @param id String
-     * @return user.
+     * @return account Request.
      */
     @Override
     public AccountRequest convert(String id) {

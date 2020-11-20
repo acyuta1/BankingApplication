@@ -56,10 +56,10 @@ public class AccountRequest {
     @NotNull(groups = CurrentAccountValidation.class)
     private String employer;
 
-    @NotNull(message = "loan.is.null", groups = {LoanAccountValidation.class})
+    @NotNull(message = "account.request.loan.is.null", groups = {LoanAccountValidation.class})
     private Long loanAmount;
 
-    @NotNull(message = "repayment.tenure.is.empty", groups = {LoanAccountValidation.class})
+    @NotNull(message = "account.request.repayment.tenure.is.empty", groups = {LoanAccountValidation.class})
     private RepaymentTenure repaymentTenure = year1;
 
 }

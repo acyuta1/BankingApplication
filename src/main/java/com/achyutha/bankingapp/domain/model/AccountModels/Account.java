@@ -45,10 +45,10 @@ public abstract class Account {
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "account", cascade = CascadeType.ALL)
     private Set<Transaction> transactions = new HashSet<>();
 
-    @NotNull(message = "account.type.cannot.be.null")
+    @NotNull(message = "account.account.type.cannot.be.null")
     private AccountType accountType;
 
-    @NotNull(message = "balance.is.null")
+    @NotNull(message = "account.balance.null")
     @Range(min = 0)
     private Double balance = 0.0;
 

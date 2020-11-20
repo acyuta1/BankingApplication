@@ -22,8 +22,8 @@ import javax.validation.constraints.NotNull;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class CurrentAccount extends Account{
 
-    @NotNull(message = "employer.is.null")
-    @NotEmpty(message = "employer.is.empty")
+    @NotNull(message = "current.account.employer.is.null")
+    @NotEmpty(message = "current.account.employer.is.empty")
     private String employer;
 
 }

@@ -21,10 +21,10 @@ import javax.validation.constraints.NotNull;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class SavingsAccount extends Account {
 
-    @NotNull(message = "interest.accrued.cannot.be.null")
+    @NotNull(message = "savings.account.interest.accrued.cannot.be.null")
     private Double interestAccruedLastMonth = 0.0;
 
-    @NotNull(message = "transaction.limit.null")
+    @NotNull(message = "savings.account.transaction.limit.null")
     private Integer transactionsRemaining;
 
 }

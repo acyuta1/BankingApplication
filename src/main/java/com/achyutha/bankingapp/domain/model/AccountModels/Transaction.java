@@ -26,10 +26,10 @@ public class Transaction {
     @Id
     private String id;
 
-    @NotNull(message = "prior.balance.null")
+    @NotNull(message = "transaction.prior.balance.null")
     private Double balancePriorTransaction;
 
-    @NotNull(message = "post.balance.null")
+    @NotNull(message = "transaction.post.balance.null")
     private Double balanceAfterTransaction;
 
     private LocalDateTime transactionDate;

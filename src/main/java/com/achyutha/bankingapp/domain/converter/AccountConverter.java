@@ -20,10 +20,10 @@ public class AccountConverter implements Converter<String, Account> {
     private final AccountRepository<Account> accountRepository;
 
     /**
-     * Fetches a user when the id is provided.
+     * Fetches a Acount when the id is provided.
      *
      * @param id String
-     * @return user.
+     * @return account.
      */
     @SneakyThrows
     @Override

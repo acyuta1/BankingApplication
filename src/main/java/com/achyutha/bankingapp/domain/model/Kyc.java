@@ -36,17 +36,17 @@ public class Kyc {
     @Id
     private String id;
 
-    @NotBlank(message = "username.empty", groups = {CustomerLevelValidation.class})
+    @NotBlank(message = "kyc.username.empty", groups = {CustomerLevelValidation.class})
     private String userName;
 
-    @NotNull(message = "dob.empty", groups = {CustomerLevelValidation.class})
+    @NotNull(message = "kyc.dob.empty", groups = {CustomerLevelValidation.class})
     private LocalDate dob;
 
-    @NotBlank(message = "aadhar.number.required", groups = {AdminLevelValidation.class, CustomerLevelValidation.class})
+    @NotBlank(message = "kyc.aadhar.number.required", groups = {AdminLevelValidation.class, CustomerLevelValidation.class})
     @Size(min = 12, max = 12, groups = {AdminLevelValidation.class, CustomerLevelValidation.class})
     private String aadharNumber;
 
-    @NotBlank(message = "pan.card.id.required", groups = {AdminLevelValidation.class, CustomerLevelValidation.class})
+    @NotBlank(message = "kyc.pan.card.id.required", groups = {AdminLevelValidation.class, CustomerLevelValidation.class})
     @Size(min = 10, max = 10, groups = {AdminLevelValidation.class, CustomerLevelValidation.class})
     private String panCard;
 

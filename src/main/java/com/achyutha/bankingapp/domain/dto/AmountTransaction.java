@@ -18,11 +18,11 @@ import javax.validation.constraints.NotNull;
 @Accessors(chain = true)
 public class AmountTransaction {
 
-    @NotNull(message = "account.type.null")
+    @NotNull(message = "amount.transaction.account.type.null")
     @Convert(converter = AccountTypeToStringConverter.class)
     private AccountType accountType;
 
-    @NotNull(message = "transaction.type.null")
+    @NotNull(message = "amount.transaction.transaction.type.null")
     private TransactionType transactionType = TransactionType.deposit;
 
     private Double amount;
