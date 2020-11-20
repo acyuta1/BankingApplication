@@ -1,7 +1,7 @@
 package com.achyutha.bankingapp.domain.converter;
 
 import com.achyutha.bankingapp.domain.model.User;
-import com.achyutha.bankingapp.domain.service.UserRepository;
+import com.achyutha.bankingapp.domain.service.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.convert.converter.Converter;

@@ -3,15 +3,18 @@ package com.achyutha.bankingapp.common;
 import com.achyutha.bankingapp.auth.dto.SignUpRequest;
 import com.achyutha.bankingapp.auth.jwt.UserDetailsServiceImpl;
 import com.achyutha.bankingapp.auth.model.RoleType;
-import com.achyutha.bankingapp.domain.model.UserStatus;
+import com.achyutha.bankingapp.domain.model.enums.UserStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -26,6 +29,8 @@ public class Utils {
     private final UserDetailsServiceImpl userDetailsService;
 
     private final Validator validator;
+
+    private final JavaMailSender javaMailSender;
 
     /**
      * To generate an email for the newly registered employee, with first-name and employeeId (unique).
@@ -64,7 +69,8 @@ public class Utils {
 
     /**
      * To validate an object provided with validation group.
-     * @param object The object being validated.
+     *
+     * @param object  The object being validated.
      * @param classes The classes.
      */
     public void checkForErrors(Object object, Class<?>... classes) {
@@ -74,6 +80,40 @@ public class Utils {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("errors: %s",
                     errors.stream().map(ConstraintViolation::getMessage).collect(Collectors.joining(" "))));
         }
+    }
+
+    /**
+     * Basic template to send a mail.
+     *
+     * @param receiverEmail The target email.
+     * @param subject       The email subject.
+     * @param text          The mail body.
+     */
+    public void sendEmail(String receiverEmail, String subject, String text) {
+
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setTo(receiverEmail);
+        msg.setFrom(BANK_APP_NO_REPLY);
+        msg.setSubject(subject);
+        msg.setText(text);
+
+        javaMailSender.send(msg);
+
+    }
+
+    /**
+     * Checking if the param actually exists.
+     *
+     * @param approve Map, consisting of a key, value(true/false)
+     */
+    public static boolean paramCheck(Map<String, String> approve) {
+        if (approve.isEmpty() || !approve.containsKey(APPROVE_CONSTANT))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Approval param needed.");
+        if(approve.get(APPROVE_CONSTANT).equals("yes"))
+            return true;
+        else if(approve.get(APPROVE_CONSTANT).equals("no"))
+            return false;
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Please approve with either yes/no");
     }
 
 

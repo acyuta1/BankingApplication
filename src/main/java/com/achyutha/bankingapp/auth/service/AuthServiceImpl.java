@@ -13,11 +13,11 @@ import com.achyutha.bankingapp.common.validation.group.CustomerLevelValidation;
 import com.achyutha.bankingapp.common.validation.group.EmployeeLevelValidation;
 import com.achyutha.bankingapp.domain.converter.RoleConverter;
 import com.achyutha.bankingapp.domain.model.AccountModels.CurrentAccount;
-import com.achyutha.bankingapp.domain.model.AccountStatus;
-import com.achyutha.bankingapp.domain.model.AccountType;
-import com.achyutha.bankingapp.domain.model.KycVerificationStatus;
+import com.achyutha.bankingapp.domain.model.enums.AccountStatus;
+import com.achyutha.bankingapp.domain.model.enums.AccountType;
+import com.achyutha.bankingapp.domain.model.enums.KycVerificationStatus;
 import com.achyutha.bankingapp.domain.model.User;
-import com.achyutha.bankingapp.domain.service.UserRepository;
+import com.achyutha.bankingapp.domain.service.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -141,7 +141,10 @@ public class AuthServiceImpl implements AuthService {
                 roles.add(roleConverter.convert(role));
         });
         userRepository.save(user.setRoles(roles));
-        return ResponseEntity.ok(new SignUpResponse().setId(user.getId()).setUserName(user.getUsername()));
+        return ResponseEntity.ok(new SignUpResponse()
+                .setName(String.format("%s %s", user.getFirstName(), user.getLastName()))
+                .setId(user.getId())
+                .setUserName(user.getUsername()));
     }
 
     @Override

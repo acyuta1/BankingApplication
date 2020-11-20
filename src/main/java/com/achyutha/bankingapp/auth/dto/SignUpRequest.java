@@ -5,15 +5,15 @@ import com.achyutha.bankingapp.common.validation.group.AdminLevelValidation;
 import com.achyutha.bankingapp.common.validation.group.CustomerLevelValidation;
 import com.achyutha.bankingapp.common.validation.group.EmployeeLevelValidation;
 import com.achyutha.bankingapp.domain.model.Kyc;
-import com.achyutha.bankingapp.domain.model.UserStatus;
+import com.achyutha.bankingapp.domain.model.enums.UserStatus;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.hibernate.validator.constraints.Length;
 
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.*;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
@@ -24,6 +24,8 @@ import java.util.Set;
 @Getter
 @Setter
 @Accessors(chain = true)
+@NoArgsConstructor
+@AllArgsConstructor
 public class SignUpRequest {
 
     @NotBlank(message = "first.name.empty", groups = {AdminLevelValidation.class, CustomerLevelValidation.class, EmployeeLevelValidation.class})
@@ -36,6 +38,7 @@ public class SignUpRequest {
     private LocalDate dob;
 
     @NotBlank(message = "password.is.empty", groups = {AdminLevelValidation.class})
+    @Size(min = 7, max = 120, groups = {AdminLevelValidation.class})
     private String password;
 
     @NotEmpty(message = "email.empty", groups = {AdminLevelValidation.class, CustomerLevelValidation.class})
@@ -49,4 +52,5 @@ public class SignUpRequest {
 
     @NotNull(message = "kyc.empty", groups = {AdminLevelValidation.class, EmployeeLevelValidation.class})
     private Kyc kyc;
+
 }

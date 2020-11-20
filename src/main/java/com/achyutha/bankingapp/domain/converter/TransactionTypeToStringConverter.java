@@ -1,6 +1,6 @@
 package com.achyutha.bankingapp.domain.converter;
 
-import com.achyutha.bankingapp.domain.model.TransactionType;
+import com.achyutha.bankingapp.domain.model.enums.TransactionType;
 
 import javax.persistence.AttributeConverter;
 

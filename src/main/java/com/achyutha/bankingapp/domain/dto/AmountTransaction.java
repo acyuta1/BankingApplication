@@ -1,8 +1,8 @@
 package com.achyutha.bankingapp.domain.dto;
 
 import com.achyutha.bankingapp.domain.converter.AccountTypeToStringConverter;
-import com.achyutha.bankingapp.domain.model.AccountType;
-import com.achyutha.bankingapp.domain.model.TransactionType;
+import com.achyutha.bankingapp.domain.model.enums.AccountType;
+import com.achyutha.bankingapp.domain.model.enums.TransactionType;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;

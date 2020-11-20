@@ -1,7 +1,7 @@
 package com.achyutha.bankingapp.domain.model.AccountModels;
 
-import com.achyutha.bankingapp.domain.model.AccountStatus;
-import com.achyutha.bankingapp.domain.model.AccountType;
+import com.achyutha.bankingapp.domain.model.enums.AccountStatus;
+import com.achyutha.bankingapp.domain.model.enums.AccountType;
 import com.achyutha.bankingapp.domain.model.User;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;

@@ -8,7 +8,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @ConfigurationPropertiesScan
-@ComponentScan
 @EnableScheduling
 public class BankingApplication {
     public static void main(String[] args) {

@@ -1,7 +1,7 @@
 package com.achyutha.bankingapp.domain.converter;
 
 import com.achyutha.bankingapp.domain.model.AccountModels.Account;
-import com.achyutha.bankingapp.domain.service.AccountRepository;
+import com.achyutha.bankingapp.domain.service.account.AccountRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;

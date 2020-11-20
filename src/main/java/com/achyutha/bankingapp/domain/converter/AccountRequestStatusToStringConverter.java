@@ -1,6 +1,6 @@
 package com.achyutha.bankingapp.domain.converter;
 
-import com.achyutha.bankingapp.domain.model.AccountRequestStatus;
+import com.achyutha.bankingapp.domain.model.enums.AccountRequestStatus;
 
 import javax.persistence.AttributeConverter;
 

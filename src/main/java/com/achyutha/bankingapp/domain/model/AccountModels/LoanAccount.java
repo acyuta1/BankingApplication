@@ -1,6 +1,6 @@
 package com.achyutha.bankingapp.domain.model.AccountModels;
 
-import com.achyutha.bankingapp.domain.model.RepaymentTenure;
+import com.achyutha.bankingapp.domain.model.enums.RepaymentTenure;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.Accessors;
@@ -11,7 +11,7 @@ import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.validation.constraints.NotNull;
 
-import static com.achyutha.bankingapp.domain.model.RepaymentTenure.year1;
+import static com.achyutha.bankingapp.domain.model.enums.RepaymentTenure.year1;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter

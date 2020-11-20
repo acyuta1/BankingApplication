@@ -3,11 +3,12 @@ package com.achyutha.bankingapp.domain.controller;
 import com.achyutha.bankingapp.auth.dto.SignUpRequest;
 import com.achyutha.bankingapp.auth.jwt.UserDetailsServiceImpl;
 import com.achyutha.bankingapp.domain.dto.UpdateAfterCreation;
-import com.achyutha.bankingapp.domain.model.AccountRequest;
+import com.achyutha.bankingapp.domain.model.AccountModels.AccountRequest;
 import com.achyutha.bankingapp.domain.model.Kyc;
 import com.achyutha.bankingapp.domain.model.User;
-import com.achyutha.bankingapp.domain.model.UserStatus;
-import com.achyutha.bankingapp.domain.service.EmployeeService;
+import com.achyutha.bankingapp.domain.model.enums.KycVerificationStatus;
+import com.achyutha.bankingapp.domain.model.enums.UserStatus;
+import com.achyutha.bankingapp.domain.service.user.EmployeeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Employee Controller.
@@ -54,9 +56,9 @@ public class EmployeeController {
         log.debug("Comparing username against logged in username");
         compareUserName(user.getUsername());
         // Checking if the user is active.
-        if (!user.getUserStatus().equals(UserStatus.active)) {
+        if (user.getKyc() == null || !user.getKyc().getKycVerificationStatus().equals(KycVerificationStatus.verified) || !user.getUserStatus().equals(UserStatus.active)){
             log.error("Employee is either inactive or does not exist.");
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "logged in user is not active.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Employee is not active");
         }
     }
 
@@ -143,7 +145,7 @@ public class EmployeeController {
     @PreAuthorize("hasRole('EMPLOYEE')")
     public ResponseEntity<?> processKyc(@PathVariable("id") User user,
                                         @PathVariable("kycId") Kyc kyc,
-                                        @RequestParam("approve") Boolean approve) {
+                                        @RequestParam Map<String, String> approve) {
         isActive(user);
         log.debug("Processing a kyc request.");
         return employeeService.processKycRequest(kyc, approve);
@@ -153,7 +155,7 @@ public class EmployeeController {
     @PreAuthorize("hasRole('EMPLOYEE')")
     public ResponseEntity<?> processAccountRequest(@PathVariable("id") User user,
                                                    @PathVariable("accountRequestId") AccountRequest accountRequest,
-                                                   @RequestParam("approve") Boolean approve) {
+                                                   @RequestParam Map<String, String> approve) {
         isActive(user);
         log.debug("Processing an account request.");
         return employeeService.processAccRequest(accountRequest, approve);

@@ -4,8 +4,8 @@ import com.achyutha.bankingapp.common.validation.group.CurrentAccountValidation;
 import com.achyutha.bankingapp.common.validation.group.LoanAccountValidation;
 import com.achyutha.bankingapp.common.validation.group.SavingsAccountValidation;
 import com.achyutha.bankingapp.domain.converter.AccountTypeToStringConverter;
-import com.achyutha.bankingapp.domain.model.AccountType;
-import com.achyutha.bankingapp.domain.model.RepaymentTenure;
+import com.achyutha.bankingapp.domain.model.enums.AccountType;
+import com.achyutha.bankingapp.domain.model.enums.RepaymentTenure;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -14,7 +14,7 @@ import org.hibernate.validator.constraints.Range;
 import javax.persistence.Convert;
 import javax.validation.constraints.NotNull;
 
-import static com.achyutha.bankingapp.domain.model.RepaymentTenure.year1;
+import static com.achyutha.bankingapp.domain.model.enums.RepaymentTenure.year1;
 
 /**
  * A transaction DTO.

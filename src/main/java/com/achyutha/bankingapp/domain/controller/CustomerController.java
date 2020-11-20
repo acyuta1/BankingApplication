@@ -1,14 +1,20 @@
 package com.achyutha.bankingapp.domain.controller;
 
 import com.achyutha.bankingapp.auth.jwt.UserDetailsServiceImpl;
+import com.achyutha.bankingapp.common.Utils;
 import com.achyutha.bankingapp.domain.dto.AccountRequestDto;
 import com.achyutha.bankingapp.domain.dto.AmountTransaction;
 import com.achyutha.bankingapp.domain.dto.TransferAmountDto;
 import com.achyutha.bankingapp.domain.dto.UpdateAfterCreation;
 import com.achyutha.bankingapp.domain.model.AccountModels.Account;
-import com.achyutha.bankingapp.domain.model.*;
-import com.achyutha.bankingapp.domain.service.CustomerService;
+import com.achyutha.bankingapp.domain.model.AccountModels.AccountRequest;
+import com.achyutha.bankingapp.domain.model.Kyc;
+import com.achyutha.bankingapp.domain.model.User;
+import com.achyutha.bankingapp.domain.model.enums.AccountStatus;
+import com.achyutha.bankingapp.domain.model.enums.KycVerificationStatus;
+import com.achyutha.bankingapp.domain.model.enums.UserStatus;
 import com.achyutha.bankingapp.domain.service.ExportToPdf;
+import com.achyutha.bankingapp.domain.service.user.CustomerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -25,6 +31,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import static com.achyutha.bankingapp.common.Constants.CUSTOMER_NOT_ACTIVE;
 
@@ -41,6 +48,8 @@ public class CustomerController {
     private final CustomerService customerService;
 
     private final UserDetailsServiceImpl userDetailsService;
+
+    private final Utils utils;
 
     /**
      * Compares whether the current user is equal to the logged in user.
@@ -59,20 +68,21 @@ public class CustomerController {
      */
     private void checkIfActive(User user) {
         compareUserName(user.getUsername());
-        if (user.getKyc() == null || !user.getKyc().getKycVerificationStatus().equals(KycVerificationStatus.verified) || user.getUserStatus().equals(UserStatus.inactive))
+        if (user.getKyc() == null || !user.getKyc().getKycVerificationStatus().equals(KycVerificationStatus.verified) || !user.getUserStatus().equals(UserStatus.active))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, CUSTOMER_NOT_ACTIVE);
     }
 
     /**
      * Initial check to see if the account belongs to user and is active.
-     * @param user The user.
+     *
+     * @param user    The user.
      * @param account The account linked to user.
      */
-    public void checkForAccountValidity(User user, Account account, Boolean isActiveCheck){
+    public void checkForAccountValidity(User user, Account account, Boolean isActiveCheck) {
         checkIfActive(user);
         if (!account.getUser().getUsername().equals(user.getUsername()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Account does not belong to user.");
-        if(isActiveCheck){
+        if (isActiveCheck) {
             if (!account.getAccountStatus().equals(AccountStatus.active)) {
                 log.error("The account {} is not active", account.getId());
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Account is not active");
@@ -174,7 +184,7 @@ public class CustomerController {
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<?> closeAccount(@PathVariable("id") User user,
                                           @PathVariable("accountId") Account account) {
-        checkIfActive(user);
+        checkForAccountValidity(user, account, true);
         log.trace("Attempting to close account {} by user {}", account.getId(), user.getUsername());
         return customerService.closeAccount(user, account);
     }
@@ -182,6 +192,7 @@ public class CustomerController {
     @GetMapping("/{id}/account/export")
     @PreAuthorize("hasRole('CUSTOMER')")
     public void exportToPdf(@PathVariable("id") User user,
+                            @RequestParam Map<String, String> map,
                             HttpServletResponse response) throws IOException {
         checkIfActive(user);
         response.setContentType("application/pdf");
@@ -193,7 +204,7 @@ public class CustomerController {
         response.setHeader(headerKey, headerValue);
 
         ExportToPdf exporter = new ExportToPdf(user);
-        exporter.export(response);
+        exporter.export(response, map);
     }
 
 

@@ -27,7 +27,7 @@ public class AuthenticationController {
     private final AuthService authService;
 
     /**
-     * To login a registered user.
+     * Login page, for a registered customer.
      * @param loginRequest The login request payload mapped to an appropriate DTO.
      * @return If authentication is successful, the JwtResponse is sent along with status ok.
      */

@@ -4,6 +4,8 @@ import com.achyutha.bankingapp.auth.model.Role;
 import com.achyutha.bankingapp.common.validation.group.AdminLevelValidation;
 import com.achyutha.bankingapp.domain.converter.UserStatusToStringConverter;
 import com.achyutha.bankingapp.domain.model.AccountModels.Account;
+import com.achyutha.bankingapp.domain.model.AccountModels.AccountRequest;
+import com.achyutha.bankingapp.domain.model.enums.UserStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
@@ -21,6 +23,9 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * User Table.
+ */
 @Entity()
 @Table(name = "users")
 @Getter
@@ -55,7 +60,7 @@ public class User {
     private String email;
 
     @NotBlank
-    @Size(max = 120)
+    @Size(min = 7, max = 120)
     @JsonIgnore
     private String password;
 

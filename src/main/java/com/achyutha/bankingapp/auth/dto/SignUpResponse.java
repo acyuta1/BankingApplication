@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
+import static com.achyutha.bankingapp.common.Constants.SIGN_IN_RESPONSE;
+
 /**
  * JwtResponse DTO.
  */
@@ -14,9 +16,16 @@ import lombok.experimental.Accessors;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class SignUpResponse {
 
-    private Long Id;
+    private Long id;
+
+    private String name;
 
     private String userName;
 
     private String tempPassword;
+
+    @Override
+    public String toString() {
+        return (String.format(SIGN_IN_RESPONSE, name, id, tempPassword));
+    }
 }

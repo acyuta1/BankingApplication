@@ -2,7 +2,7 @@ package com.achyutha.bankingapp.domain.controller;
 
 import com.achyutha.bankingapp.auth.dto.SignUpRequest;
 import com.achyutha.bankingapp.domain.model.User;
-import com.achyutha.bankingapp.domain.service.AdminService;
+import com.achyutha.bankingapp.domain.service.user.AdminService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

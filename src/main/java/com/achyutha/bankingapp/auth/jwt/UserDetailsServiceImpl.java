@@ -1,7 +1,7 @@
 package com.achyutha.bankingapp.auth.jwt;
 
 import com.achyutha.bankingapp.domain.model.User;
-import com.achyutha.bankingapp.domain.service.UserRepository;
+import com.achyutha.bankingapp.domain.service.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

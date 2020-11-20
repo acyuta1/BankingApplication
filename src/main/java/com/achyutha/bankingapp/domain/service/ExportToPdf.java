@@ -1,8 +1,8 @@
 package com.achyutha.bankingapp.domain.service;
 
 import com.achyutha.bankingapp.domain.model.AccountModels.*;
-import com.achyutha.bankingapp.domain.model.AccountType;
 import com.achyutha.bankingapp.domain.model.User;
+import com.achyutha.bankingapp.domain.model.enums.AccountType;
 import com.lowagie.text.Font;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.PdfPCell;
@@ -16,10 +16,13 @@ import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.achyutha.bankingapp.common.Constants.BasicFormatting.FORMAT_2;
 import static com.achyutha.bankingapp.common.Constants.*;
 
 
@@ -35,17 +38,17 @@ public class ExportToPdf {
      * @param table Target table.
      * @param headers The list consisting of header names.
      */
-    private void constructHeaderFromList(PdfPTable table, List<String> headers) {
+    private void constructHeaderFromList(PdfPTable table, List<String> headers, Color backgroundColor, Color fontColor) {
 
         log.trace("Adding headers");
         // Adding new cell.
         PdfPCell cell = new PdfPCell();
-        cell.setBackgroundColor(Color.BLUE);
+        cell.setBackgroundColor(backgroundColor);
         cell.setPadding(5);
 
         // Font configuration.
         Font font = FontFactory.getFont(FontFactory.HELVETICA);
-        font.setColor(Color.WHITE);
+        font.setColor(fontColor);
 
         // Iterating through the list and adding headers.
         for(String header: headers) {
@@ -80,7 +83,16 @@ public class ExportToPdf {
         }
     }
 
-    private void writeTransactionTableData(PdfPTable table, List<Transaction> transactionList) {
+    private void writeTransactionTableData(PdfPTable table, List<Transaction> transactionList, Map<String, String> timeBetween) {
+        int monthRequest;
+        if(timeBetween.isEmpty() || !timeBetween.containsKey("month") || !VALID_MONTH.contains(Integer.parseInt(timeBetween.get("month"))))
+            monthRequest = 1;
+        else {
+            monthRequest = Integer.parseInt(timeBetween.get("month"));
+        }
+        transactionList = transactionList.stream()
+                .filter(i-> i.getTransactionDate().isEqual(LocalDateTime.now().minusMonths(monthRequest)) || i.getTransactionDate().isAfter(LocalDateTime.now().minusMonths(monthRequest)))
+                .collect(Collectors.toList());
         // Iterating through the transactions and setting fields.
         log.trace("Adding transaction table items");
         for (Transaction transaction : transactionList) {
@@ -91,7 +103,7 @@ public class ExportToPdf {
         }
     }
 
-    public void export(HttpServletResponse response) throws DocumentException, IOException {
+    public void export(HttpServletResponse response, Map<String, String> map) throws DocumentException, IOException {
         // New document.
         Document document = new Document(PageSize.A4);
         PdfWriter.getInstance(document, response.getOutputStream());
@@ -111,8 +123,8 @@ public class ExportToPdf {
         font.setColor(Color.BLACK);
         font.setSize(10);
         p = new Paragraph(String.format(
-                "User ID - %s\nFull Name - %s\nTotal Accounts - %s\nUser Status - %s\nStatement Period - %s",
-                user.getUsername(), String.format("%s %s",user.getFirstName(),user.getLastName()), user.getAccounts().size(), user.getUserStatus(), LocalDate.now()), font);
+                EXPORT_USER_DETAILS,
+                user.getUsername(), String.format(FORMAT_2,user.getFirstName(),user.getLastName()), user.getAccounts().size(), user.getUserStatus(), LocalDate.now()), font);
         p.setAlignment(Paragraph.ALIGN_RIGHT);
         document.add(p);
 
@@ -140,7 +152,7 @@ public class ExportToPdf {
                 table.setWidthPercentage(100f);
                 table.setSpacingBefore(10);
 
-                constructHeaderFromList(table, headers);
+                constructHeaderFromList(table, headers, Color.BLUE, Color.white);
                 writeAccountTableData(table,account);
                 document.add(table);
 
@@ -154,8 +166,8 @@ public class ExportToPdf {
                 table = new PdfPTable(headers.size());
                 table.setWidthPercentage(100f);
                 table.setSpacingBefore(10);
-                constructHeaderFromList(table, headers);
-                writeTransactionTableData(table,transactions.stream().sorted(Comparator.comparing(Transaction::getTransactionDate)).collect(Collectors.toList()));
+                constructHeaderFromList(table, headers, Color.ORANGE, Color.BLACK);
+                writeTransactionTableData(table,transactions.stream().sorted(Comparator.comparing(Transaction::getTransactionDate)).collect(Collectors.toList()), map);
                 document.add(table);
             }
         }

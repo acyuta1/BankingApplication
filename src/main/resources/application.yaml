@@ -1,5 +1,4 @@
 spring:
-
   application:
     name: BankingApplication
   messages:
@@ -36,6 +35,19 @@ spring:
           fallback-pageable:
             page-parameter: page
             size-parameter: size
+  mail:
+    protocol: smtp
+    host: smtp.mailtrap.io
+    port: 2525
+    properties:
+      mail:
+        smtp:
+          auth: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+          starttls:
+            enable: true
 
 server:
   error:
@@ -43,7 +55,7 @@ server:
 
 bank-application-properties:
   jwt-secret: bankAppSecurityKey
-  jwt-expiration-ms: 60000 #10 minutes
+  jwt-expiration-ms: 600000 #10 minutes
   min-balance-savings: 300
   transaction-limit-savings: 10
   max-withdraw-limit: 100000

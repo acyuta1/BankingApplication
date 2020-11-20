@@ -2,7 +2,7 @@ package com.achyutha.bankingapp.domain.service;
 
 
 import com.achyutha.bankingapp.domain.model.Kyc;
-import com.achyutha.bankingapp.domain.model.KycVerificationStatus;
+import com.achyutha.bankingapp.domain.model.enums.KycVerificationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
